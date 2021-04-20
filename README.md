@@ -20,3 +20,5 @@ Overall tasks of the project:
 8. examples on how to run each method.
 9. reproduce the experiment section of COHORTNEY with your new library on all six methods.
 10. pip package
+
+More detailed information about the project may be found in the recent report(s).
