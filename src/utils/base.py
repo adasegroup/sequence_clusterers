@@ -1,5 +1,10 @@
 import logging
 import warnings
+import random
+
+import numpy as np
+import torch
+from pytorch_lightning.utilities import rank_zero_only
 
 
 def get_logger(name=__name__, level=logging.INFO):
@@ -15,5 +20,13 @@ def get_logger(name=__name__, level=logging.INFO):
 
     return logger
 
+
+def setup_seed(seed):
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.manual_seed(seed)  # cpu
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = True
 
 log = get_logger()

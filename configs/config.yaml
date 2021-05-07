@@ -1,0 +1,12 @@
+defaults:
+    - trainer: default.yaml
+    - model: default.yaml
+    - callbacks: default.yaml  # set this to null if you don't want to use callbacks
+    - logger: null  # set logger here or use command line (e.g. `python run.py logger=wandb`)
+    - experiment: null
+
+work_dir: ${hydra:runtime.cwd}
+debug: False
+
+# disable python warnings if they annoy you
+ignore_warnings: True

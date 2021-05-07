@@ -1,0 +1,6 @@
+testtube:
+    _target_: pytorch_lightning.loggers.tensorboard.TensorBoardLogger
+    save_dir: logs
+    name: *exp_name
+    debug: False
+    create_git_tag: False
