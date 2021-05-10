@@ -1,0 +1,4 @@
+_target_: src.dataset.RandomGeneratedSequences
+path_to_csvs: ${data_dir}  # data_dir is specified in exp
+num_of_event_types: 7
+num_of_steps: 1000

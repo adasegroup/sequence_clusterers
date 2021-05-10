@@ -1,3 +1,4 @@
+__all__ = ['SinglePointProcessSystem']
 """
 This file contains system for training clustering with single point process model
 """
