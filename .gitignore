@@ -138,7 +138,7 @@ dmypy.json
 
 # JetBrains
 .idea/
-
+.DS_Store
 # project elements
 data/
 logs/
