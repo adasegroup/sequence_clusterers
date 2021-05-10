@@ -24,7 +24,8 @@ Overall tasks of the project:
 More detailed information about the project may be found in the recent report(s).
 
 The current structure of the repository:
-.
+
+```
 ├── README.md
 ├── configs
 │   ├── callbacks
@@ -66,3 +67,4 @@ The current structure of the repository:
         ├── datamodule.py
         ├── metrics.py
         └── net.py
+```
