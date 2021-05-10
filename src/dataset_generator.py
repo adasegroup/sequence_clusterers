@@ -11,7 +11,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 # imports
-#from networks.lstm_pp import LSTMSinglePointProcess
+from networks.lstm_pp import LSTMSinglePointProcess
 import torch
 
 
