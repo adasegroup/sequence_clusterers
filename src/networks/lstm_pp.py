@@ -6,6 +6,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
+from torch.nn.parameter import Parameter
 
 from src.utils import ScaledSoftplus
 
