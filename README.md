@@ -22,3 +22,49 @@ Overall tasks of the project:
 10. pip package
 
 More detailed information about the project may be found in the recent report(s).
+
+The current structure of the repository:
+
+```
+├── README.md
+├── configs
+│   ├── callbacks
+│   │   └── default.yaml
+│   ├── config.yaml
+│   ├── datamodule
+│   │   └── default.yaml
+│   ├── experiment
+│   │   └── default.yaml
+│   ├── logger
+│   │   └── default.yaml
+│   ├── model
+│   │   └── default.yaml
+│   └── trainer
+│       └── default.yaml
+├── reports
+│   └── cohortney_report_1.pdf
+├── requirements.txt
+├── reviews
+│   ├── peer1_cohortney_mmdf.pdf
+│   ├── peer1_cohortney_oms.pdf
+│   └── peer1_cohortney_prophet.pdf
+├── run.py
+└── src
+    ├── __init__.py
+    ├── dataset
+    │   ├── __init__.py
+    │   └── random_seq.py
+    ├── dataset_generator.py
+    ├── model
+    │   └── single_pp_cohortney.py
+    ├── networks
+    │   ├── losses.py
+    │   └── lstm_pp.py
+    ├── train.py
+    └── utils
+        ├── __init__.py
+        ├── base.py
+        ├── datamodule.py
+        ├── metrics.py
+        └── net.py
+```
