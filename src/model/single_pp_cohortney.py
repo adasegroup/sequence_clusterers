@@ -70,19 +70,20 @@ class SinglePointProcessSystem(pl.LightningModule):
                           pin_memory=True)
 
     def training_step(self, batch, batch_nb):
-        res = {}
         lambdas = self.model(batch)
         loss = self.criterion(batch, lambdas, batch[:, 0, 0])
 
         # saving results
+        # changed dict to simple variable
+        mse = 0.0
         if self.generator_model:
             true_lambdas = self.generator_model(batch)
-            res['mse'] = np.var((lambdas.detach().numpy() - true_lambdas.detach().numpy()))
+            mse = np.var((lambdas.detach().numpy() - true_lambdas.detach().numpy()))
 
         self.log('lr', get_learning_rate(self.optimizer))
         self.log('train/loss', loss.item(),)
 
-        self.log('train/mse', res.pop('mse', 0.0), prog_bar=True)
+        self.log('train/mse', mse, prog_bar=True)
 
         return loss
 
