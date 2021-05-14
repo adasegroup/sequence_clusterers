@@ -33,10 +33,12 @@ def generate_dataset(n_classes, n_clusters, n_points_per_cluster, n_timestamps,
     """
     data = torch.zeros(n_clusters * n_points_per_cluster, n_timestamps, n_classes + 1)
     target = torch.zeros(n_clusters * n_points_per_cluster)
+
     for k in range(n_clusters):
         model = LSTMSinglePointProcess(n_classes + 1, hidden_size, num_layers, n_classes)
         data[k * n_points_per_cluster:(k + 1) * n_points_per_cluster, :, :] \
             = model.simulate(n_points_per_cluster, torch.rand(n_points_per_cluster) * dt_scaling_param,
                              n_timestamps, True)
         target[k * n_points_per_cluster:(k + 1) * n_points_per_cluster] = k
+
     return data, target

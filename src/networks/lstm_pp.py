@@ -41,14 +41,17 @@ class LSTMSinglePointProcess(nn.Module):
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers,
                             batch_first=batch_first, dropout=dropout,
                             bidirectional=bidirectional)
+
         if bidirectional:
             self.hidden0 = nn.Parameter(torch.randn(num_layers * 2, hidden_size))
             self.cell0 = nn.Parameter(torch.randn(num_layers * 2, hidden_size))
             self.W = nn.Parameter(torch.randn(hidden_size * 2, num_classes))
+
         else:
             self.hidden0 = nn.Parameter(torch.randn(num_layers, hidden_size))
             self.cell0 = nn.Parameter(torch.randn(num_layers, hidden_size))
             self.W = nn.Parameter(torch.randn(hidden_size, num_classes))
+
         self.f = ScaledSoftplus()
         self.num_classes = num_classes
         self.bidir = bidirectional
@@ -136,6 +139,7 @@ class LSTMSinglePointProcess(nn.Module):
                         res[b, s, 0] = dt[b]
                         hidden = hidden0.clone()
                         cell = cell0.clone()
+
                     else:
                         # computing lambda
                         o, (hidden, cell) = self.lstm(res[b, s - 1][None, None, :], (hidden, cell))
@@ -143,6 +147,7 @@ class LSTMSinglePointProcess(nn.Module):
                         # simulation
                         res[b, s, 1:] = torch.poisson(lambdas * dt[b])
                         res[b, s, 0] = dt[b]
+
             return res
 
 
@@ -182,17 +187,22 @@ class LSTMMultiplePointProcesses(nn.Module):
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers,
                             batch_first=batch_first, dropout=dropout,
                             bidirectional=bidirectional)
+
         self.bn = nn.BatchNorm1d(n_steps)
+
         if bidirectional:
             self.hidden0 = nn.Parameter(self.init_weigh(num_clusters, num_layers * 2, hidden_size))
             self.cell0 = nn.Parameter(self.init_weigh(num_clusters, num_layers * 2, hidden_size))
             self.W = nn.Parameter(self.init_weigh(hidden_size * 2, num_classes))
+
         else:
             self.hidden0 = nn.Parameter(self.init_weigh(num_clusters, num_layers, hidden_size))
             self.cell0 = nn.Parameter(self.init_weigh(num_clusters, num_layers, hidden_size))
             self.W = nn.Parameter(self.init_weigh(hidden_size, num_classes))
+
         for k in range(num_clusters):
             setattr(self, 'f_{}'.format(k), ScaledSoftplus())
+
         self.num_classes = num_classes
         self.num_clusters = num_clusters
         self.bidir = bidirectional

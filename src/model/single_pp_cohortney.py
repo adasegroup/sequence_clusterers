@@ -12,6 +12,13 @@ from src.dataset import dataset_dict
 from src.networks.losses import cohortney_criterion
 from src.utils import get_optimizer, get_scheduler, get_learning_rate
 
+LOSS = 'loss'
+
+MSE = 'mse'
+
+VAL_LL = 'val_ll'
+VAL_MSE = 'val_mse'
+
 
 class SinglePointProcessSystem(pl.LightningModule):
     """
@@ -77,12 +84,12 @@ class SinglePointProcessSystem(pl.LightningModule):
         # saving results
         if self.generator_model:
             true_lambdas = self.generator_model(batch)
-            res['mse'] = np.var((lambdas.detach().numpy() - true_lambdas.detach().numpy()))
+            res[MSE] = np.var((lambdas.detach().numpy() - true_lambdas.detach().numpy()))
 
         self.log('lr', get_learning_rate(self.optimizer))
-        self.log('train/loss', loss.item(),)
+        self.log(f'train/{LOSS}', loss.item(),)
 
-        self.log('train/mse', res.pop('mse', 0.0), prog_bar=True)
+        self.log(f'train/{MSE}', res.pop(MSE, 0.0), prog_bar=True)
 
         return loss
 
@@ -96,15 +103,15 @@ class SinglePointProcessSystem(pl.LightningModule):
         """
         lambdas = self.model(batch)
         result = {}
-        result['val_ll'] = self.criterion(self.val, lambdas, batch[:, 0, 0])
+        result[VAL_LL] = self.criterion(self.val, lambdas, batch[:, 0, 0])
         if self.generator_model:
             true_lambdas = self.generator_model(batch)
-            result['val_mse'] = np.var((lambdas.detach().numpy() - true_lambdas.detach().numpy()))
+            result[VAL_MSE] = np.var((lambdas.detach().numpy() - true_lambdas.detach().numpy()))
         return result
 
     def validation_epoch_end(self, outputs):
-        mean_loss = torch.stack([x['val_ll'] for x in outputs]).mean()
-        mean_psnr = torch.stack([x['val_mse'] for x in outputs]).mean()
+        mean_loss = torch.stack([x[VAL_LL] for x in outputs]).mean()
+        mean_psnr = torch.stack([x[VAL_MSE] for x in outputs]).mean()
 
         self.log('val/loss', mean_loss)
         self.log('val/psnr', mean_psnr, prog_bar=True)
