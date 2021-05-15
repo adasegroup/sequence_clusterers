@@ -1,3 +1,19 @@
 _target_: src.model.SinglePointProcessSystem
 hparams:
     batch_size: 10
+    n_clusters: 1
+    n_classes: 7
+    num_layers: 3
+    num_workers: 0
+    hidden_size: 128
+    optimizer:
+        optimizer: adam
+        weight_decay: 0
+        lr: 0.001
+        momentum: 0.9
+    scheduler:
+        lr_scheduler: steplr
+        decay_gamma: 0.5
+        decay_step: [2, 4, 8]
+        warmup_epochs: 0
+        warmup_multiplier: 1.0

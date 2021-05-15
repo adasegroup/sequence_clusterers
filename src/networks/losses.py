@@ -1,7 +1,7 @@
 import torch
 
 
-def cohortney_criterion(partitions: torch.Tensor, lambdas: torch.Tensor,gamma: torch.Tensor, epsilon=1e-6):
+def cohortney_criterion(partitions: torch.Tensor, lambdas: torch.Tensor, gamma: torch.Tensor, epsilon=1e-6):
     """
         Computes loss
         :arg:

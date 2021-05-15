@@ -30,7 +30,7 @@ def train(config: DictConfig) -> Optional[float]:
 
     # Init datamodule
     log.info(f"datamodule <{config.datamodule._target_}>")
-    datamodule: LightningDataModule = hydra.utils.instantiate(config.datamodule)
+    datamodule = hydra.utils.instantiate(config.datamodule)
 
     # Init Lightning callbacks
     callbacks: List[Callback] = []
@@ -50,6 +50,8 @@ def train(config: DictConfig) -> Optional[float]:
     # Init model
     model: LightningModule = hydra.utils.instantiate(config.model)
 
+    model.train_dataset = datamodule
+    model.val_dataset = datamodule  # TODO add validation dataset
     trainer: Trainer = hydra.utils.instantiate(
         config.trainer, callbacks=callbacks, logger=logger, _convert_="partial"
     )
@@ -59,7 +61,7 @@ def train(config: DictConfig) -> Optional[float]:
 
     # Train the model
     log.info("Starting training!")
-    trainer.fit(model=model, datamodule=datamodule)
+    trainer.fit(model=model)
 
     # Evaluate model on test set after training
     if not config.trainer.get("fast_dev_run"):

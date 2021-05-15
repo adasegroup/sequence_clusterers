@@ -53,7 +53,7 @@ class LSTMSinglePointProcess(nn.Module):
         self.num_classes = num_classes
         self.bidir = bidirectional
 
-    def forward(self, s, provide_states=False):
+    def forward(self, pre_part, provide_states=False):
         """
            forward pass of the model
 
@@ -67,14 +67,14 @@ class LSTMSinglePointProcess(nn.Module):
                      hidden - torch.Tensor, hidden state of LSTM
                      cell - torch.Tensor, cell state of LSTM
         """
-        bs, seq_len, _ = s.shape
+        bs, seq_len, _ = pre_part.shape
 
         # preparing hidden and cell states
         hidden0 = self.hidden0[:, None, :].repeat(1, bs, 1)
         cell0 = self.cell0[:, None, :].repeat(1, bs, 1)
 
         # processing input with LSTM
-        out, (hidden, cell) = self.lstm(s, (hidden0, cell0))
+        out, (hidden, cell) = self.lstm(pre_part, (hidden0, cell0))
 
         # finding lambdas
         lambdas = torch.zeros(bs, seq_len, self.num_classes)
