@@ -2,6 +2,12 @@
 
 Framework for Deep Clustering of Heterogeneous Event Sequences.
 
+Default running
+```shell script
+ PYTHONPATH='.' python run.py 
+```
+
+
 Datasets:
 IPTV dataset
 Synthetic Hawkes processes realizations
