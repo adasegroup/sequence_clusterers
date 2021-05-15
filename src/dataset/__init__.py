@@ -1,4 +1,4 @@
-from src.dataset.random_seq import RandomGeneratedSequences
+from src.dataset.random_seq import *
 
 
 if __name__ == '__main__':

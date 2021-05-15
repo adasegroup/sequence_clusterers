@@ -1,4 +1,5 @@
-__all__ = ['RandomGeneratedSequences']
+__all__ = ['RandomGeneratedSequences',
+           'RandomGeneratedSequencesWithIndex']
 
 import os
 import numpy as np
@@ -33,3 +34,8 @@ class RandomGeneratedSequences(Dataset):
 
     def __getitem__(self, index):
         return self.partitions[index], self.targets[index]
+
+
+class RandomGeneratedSequencesWithIndex(RandomGeneratedSequences):
+    def __getitem__(self, index):
+        return self.partitions[index], self.targets[index], index

@@ -51,7 +51,7 @@ def train(config: DictConfig) -> Optional[float]:
     model: LightningModule = hydra.utils.instantiate(config.model)
 
     model.train_dataset = datamodule
-    model.val_dataset = datamodule  # TODO add validation dataset
+    # model.val_dataset = datamodule  # TODO add validation dataset
     trainer: Trainer = hydra.utils.instantiate(
         config.trainer, callbacks=callbacks, logger=logger, _convert_="partial"
     )

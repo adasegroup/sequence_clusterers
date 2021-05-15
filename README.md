@@ -7,6 +7,10 @@ Default running
  PYTHONPATH='.' python run.py 
 ```
 
+For multiprocess model
+```shell script
+ PYTHONPATH='.' python run.py model=multi datamodule=default_index
+```
 
 Datasets:
 IPTV dataset
