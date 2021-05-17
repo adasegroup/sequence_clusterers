@@ -1,8 +1,10 @@
 pytest
+numpy
 scikit-learn
 pandas
 matplotlib
 seaborn
+tick
 
 hydra-core==1.1.0.dev6
 
