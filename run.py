@@ -1,12 +1,20 @@
 import hydra
 from omegaconf import DictConfig
+from pytorch_lightning import seed_everything
 
-from src import train
+from src import train, cae_train, deep_cluster_train
 
 
 @hydra.main(config_path="configs/", config_name="config.yaml")
 def main(config: DictConfig):
+    # Set seed for random number generators in pytorch, numpy and python.random
+    if "seed" in config:
+        seed_everything(config.seed)
     # Train model
+    if config.task_type == 'deep_clustering':
+        deep_cluster_train(config)
+    elif config.task_type == 'cae':
+        cae_train(config)
     return train(config)
 
 

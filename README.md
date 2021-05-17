@@ -2,6 +2,16 @@
 
 Framework for Deep Clustering of Heterogeneous Event Sequences.
 
+For conv1d AutoEncoder over sequences
+```shell script
+ PYTONPATH='.' python3 run.py aux_module=cae +task_type=cae
+```
+
+Train deep clustering over sequences
+```shell script
+PYTONPATH='.' python3 run.py aux_module=deep_cluster +task_type=deep_clustering
+```
+
 Default running
 ```shell script
  PYTHONPATH='.' python run.py 

@@ -8,6 +8,7 @@ defaults:
     - callbacks: default.yaml  # set this to null if you don't want to use callbacks
     - experiment: default.yaml
     - logger: default.yaml  # set logger here or use command line (e.g. `python run.py logger=wandb`)
+    - aux_module: null
 
 work_dir: ${hydra:runtime.cwd}
 data_dir: ${work_dir}/data/sin_K2_C5

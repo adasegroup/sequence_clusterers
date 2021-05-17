@@ -4,7 +4,6 @@ from typing import List, Optional
 from pytorch_lightning import LightningModule, \
     LightningDataModule, Callback, Trainer
 from pytorch_lightning.loggers import LightningLoggerBase
-from pytorch_lightning import seed_everything
 
 import hydra
 from omegaconf import DictConfig
@@ -23,11 +22,6 @@ def train(config: DictConfig) -> Optional[float]:
     Returns:
         Optional[float]: Metric score for hyperparameter optimization.
     """
-
-    # Set seed for random number generators in pytorch, numpy and python.random
-    if "seed" in config:
-        seed_everything(config.seed)
-
     # Init datamodule
     log.info(f"datamodule <{config.datamodule._target_}>")
     datamodule = hydra.utils.instantiate(config.datamodule)
