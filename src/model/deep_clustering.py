@@ -17,6 +17,10 @@ from src.utils.metrics import purity, consistency
 from src.utils import make_grid
 from src.utils.cohortney_utils import arr_func, multiclass_fws_array, events_tensor
 
+z = torch.ones(3).cuda
+
+torch.autograd.Variable()
+
 
 def deep_cluster_train(config):
     args = config.aux_module
@@ -71,7 +75,7 @@ def deep_cluster_train(config):
             model.top_layer = None
 
             # get the features for the whole dataset
-            features = compute_features(dataloader, model, len(dataset), config.experiment.batch_size)
+            features = compute_features(dataloader, model, len(dataset), config.experiment.batch_size, device=device)
 
             # cluster the features
             if args.verbose:
@@ -198,10 +202,11 @@ def train(loader, model, crit, opt, device, args=None):
 
 
 @torch.no_grad()
-def compute_features(dataloader, model, N, batch_size):
+def compute_features(dataloader, model, N, batch_size, device):
     model.eval()
     # discard the label information in the dataloader
     for i, (input_tensor) in enumerate(dataloader):
+        input_tensor = input_tensor.to(device)
         input_var = torch.autograd.Variable(input_tensor)
         aux = model(input_var).data.cpu().numpy()
 
