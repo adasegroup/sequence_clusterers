@@ -17,10 +17,6 @@ from src.utils.metrics import purity, consistency
 from src.utils import make_grid
 from src.utils.cohortney_utils import arr_func, multiclass_fws_array, events_tensor
 
-z = torch.ones(3).cuda
-
-torch.autograd.Variable()
-
 
 def deep_cluster_train(config):
     args = config.aux_module
