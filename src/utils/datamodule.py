@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from src.dataset import dataset_urls
+from src.utils import dataset_urls
 
 
 def get_partition(sample, num_of_steps, num_of_event_types, end_time=None):
@@ -163,7 +163,6 @@ def download_unpack_zip(zipurl: str, data_dir):
 
 
 def download_link(url, destination='data'):
-    print(destination)
     res_code = os.system(f'wget {url} -P {destination}')
     if res_code != 0:
         raise Exception('Download data with some problem')
@@ -175,7 +174,7 @@ def unpack(lfilename, dir):
         file.extractall(dir)
     if check_existance(os.path.join(dir, '__MACOSX')):
         shutil.rmtree(os.path.join(dir, '__MACOSX'),)
-
+    print(f'Sucsessfully downloaded and unpack data into {dir}')
     os.remove(lfilename)
 
 

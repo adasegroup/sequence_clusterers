@@ -3,7 +3,7 @@ from omegaconf import DictConfig
 from pytorch_lightning import seed_everything
 
 from src import train, cae_train, deep_cluster_train
-from src.utils import download_dataset
+from src.utils.datamodule import download_dataset
 
 
 @hydra.main(config_path="configs/", config_name="config.yaml")

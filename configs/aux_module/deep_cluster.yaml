@@ -18,7 +18,7 @@ wd: 0.0001
 seed: 42
 workers: 4
 device: "cpu"
-verbose: true
+verbose: False
 nruns: 3
 type: null
 result_path: null

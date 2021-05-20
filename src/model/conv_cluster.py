@@ -27,7 +27,7 @@ def cae_train(config: DictConfig):
     np.set_printoptions(threshold=10000)
     torch.set_printoptions(threshold=10000)
 
-    ss, Ts, class2idx, user_list = load_data(Path(args.data_dir), maxsize=args.maxsize, maxlen=args.maxlen,
+    ss, Ts, class2idx, user_list = load_data(Path(config.data_dir), maxsize=args.maxsize, maxlen=args.maxlen,
                                              ext=args.ext, datetime=not args.not_datetime, type_=args.type)
 
     gt_ids = None

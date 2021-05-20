@@ -11,7 +11,7 @@ defaults:
     - aux_module: null
 
 work_dir: ${hydra:runtime.cwd}
-data_dir: ${work_dir}/data/sin_K2_C5
+data_dir: ${work_dir}/data/K2_C5
 debug: False
 
 # disable python warnings if they annoy you
