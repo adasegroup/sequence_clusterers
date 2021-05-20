@@ -1,6 +1,7 @@
 from src.utils.base import *
 from src.utils.metrics import *
 from src.utils.net import *
+from src.utils.datamodule import *
 
 
 def list_collate_fn(batch):

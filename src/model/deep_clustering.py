@@ -1,9 +1,8 @@
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 from torch.optim import SGD, Adam
 import numpy as np
-import argparse
 import time
 from sklearn.metrics.cluster import normalized_mutual_info_score
 from pathlib import Path

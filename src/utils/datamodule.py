@@ -1,9 +1,14 @@
 import os
 import re
+import zipfile
+import shutil
+
 import torch
 from pathlib import Path
 import numpy as np
 import pandas as pd
+
+from src.dataset import dataset_urls
 
 
 def get_partition(sample, num_of_steps, num_of_event_types, end_time=None):
@@ -144,3 +149,41 @@ def sep_hawkes_proc(user_list, event_type):
         sep_seqs.append(np.array(user_dict[event_type], dtype=np.float32))
 
     return sep_seqs
+
+
+def check_existance(dir) -> bool:
+    return os.path.exists(dir)
+
+
+def download_unpack_zip(zipurl: str, data_dir):
+    res_path = '/'.join(data_dir.split('/')[:-1])
+    download_link(zipurl, destination=res_path)
+    zip_name = zipurl.split('/')[-1]
+    unpack(lfilename=os.path.join(res_path, zip_name), dir=res_path)
+
+
+def download_link(url, destination='data'):
+    print(destination)
+    res_code = os.system(f'wget {url} -P {destination}')
+    if res_code != 0:
+        raise Exception('Download data with some problem')
+
+
+def unpack(lfilename, dir):
+    with zipfile.ZipFile(lfilename) as file:
+        os.makedirs(dir, exist_ok=True)
+        file.extractall(dir)
+    if check_existance(os.path.join(dir, '__MACOSX')):
+        shutil.rmtree(os.path.join(dir, '__MACOSX'),)
+
+    os.remove(lfilename)
+
+
+def download_dataset(data_dir, data_name):
+    """
+    Download dataset is it is availible
+    :return:
+    """
+    if not check_existance(data_dir):
+        download_unpack_zip(dataset_urls[data_name], data_dir)
+
