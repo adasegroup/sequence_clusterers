@@ -80,7 +80,7 @@ def deep_cluster_train(config):
                 print('Cluster the features')
             clustering_loss, I = deepcluster.cluster(features, verbose=args.verbose)
 
-            if Path(config.data_dir, 'clusters.csv').exists() and args.verbose:
+            if Path(config.data_dir, 'clusters.csv').exists():
                 gt_labels = pd.read_csv(Path(args.data_dir, 'clusters.csv'))['cluster_id'].to_numpy()
                 gt_labels = torch.LongTensor(gt_labels)
 
