@@ -28,7 +28,7 @@ The dataset is taken from original [repo](https://github.com/VladislavZh/pp_clus
 
 
 Overview os the project:
-The project is the implementations on the methods to cluster sequences taken from two Github repositories  in a single repository with the unified  API and code structure that follows best practises of formatting. The methods aare refactored with use if Pytorch Lightning framework so that execution of the methods is handy and fast with very deep range of configurable parameters both for the experiments and of hardware usage. 
+The project is the implementations on the methods to cluster sequences taken from two Github repositories  in a single repository with the unified  API and code structure that follows best practises of formatting. In the project we focus on the only working methods among propoced, namely DeepCluster and CAE (both over claasical Pure Chortney method) and do not include in the repository the implementations from parent repository that do not work based on execution manuals provided there. The methods aare refactored with use if Pytorch Lightning framework so that execution of the methods is handy and fast with very deep range of configurable parameters both for the experiments and of hardware usage. 
 
 The validation results are stored by the link: ``` https://github.com/adasegroup/cohortney/tree/main/results(logs) ``` 
 
