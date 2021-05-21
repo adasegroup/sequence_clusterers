@@ -20,7 +20,10 @@ def main(config: DictConfig):
         deep_cluster_train(config)
     elif config.task_type == 'cae':
         cae_train(config)
-    return train(config)
+    elif config.task_type == 'multi_pp':
+        train(config)
+    else:
+        raise Exception(f"Warning {config.task_type} is not supported")
 
 
 if __name__ == "__main__":
