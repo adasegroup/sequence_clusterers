@@ -20,7 +20,7 @@ from src.utils.cohortney_utils import arr_func, multiclass_fws_array, events_ten
 
 def deep_cluster_train(config):
     args = config.aux_module
-    exp_deep_cluster = Experiment(config.logger.test_tube.save_dir, config.logger.test_tube.name + '_deep_cluster')
+    exp_deep_cluster = Experiment(config.logger.test_tube.save_dir, config.logger.test_tube.name + '_deep_cluster' +'/'+ config.data_dir.split('/')[-1])
     exp_deep_cluster.tag({'deep_cluster': True})
     np.set_printoptions(threshold=10000)
     torch.set_printoptions(threshold=10000)

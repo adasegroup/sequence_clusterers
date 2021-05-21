@@ -6,6 +6,7 @@ import pandas as pd
 
 import torch
 from torch.utils.data import DataLoader
+from test_tube import Experiment
 from pathlib import Path
 from omegaconf import DictConfig
 from pytorch_lightning import Callback, Trainer
@@ -26,6 +27,8 @@ def cae_train(config: DictConfig):
     args = config.aux_module
     np.set_printoptions(threshold=10000)
     torch.set_printoptions(threshold=10000)
+    
+    exp_cae = Experiment(config.logger.test_tube.save_dir, config.logger.test_tube.name +'/'+ config.data_dir.split('/')[-1])
 
     ss, Ts, class2idx, user_list = load_data(Path(config.data_dir), maxsize=args.maxsize, maxlen=args.maxlen,
                                              ext=args.ext, datetime=not args.not_datetime, type_=args.type)
@@ -66,14 +69,15 @@ def cae_train(config: DictConfig):
 
 
     trainer: Trainer = hydra.utils.instantiate(
-        config.trainer, callbacks=None, logger=logger, _convert_="partial"
+        config.trainer, callbacks=None, logger=None, _convert_="partial"
     )
 
+    
     train_data_batch = DataLoader(mc_batch, batch_size=args.batch)
     val_data_batch = DataLoader(mc_batch, batch_size=args.batch)
 
     trainer.fit(model, train_data_batch, val_data_batch)
-
+    
     ans = model.encoder(mc_batch)
     X = ans.cpu().squeeze().detach().numpy()
     X_trained = X.reshape(X.shape[0], X.shape[1] * X.shape[2])
@@ -93,6 +97,7 @@ def cae_train(config: DictConfig):
     if gt_ids is not None:
         print("reals:", gt_ids)
         pur = purity(pred_y, gt_ids)
+        exp_cae.log({'purity': pur})
         print(f'\nPurity: {pur:.4f}')
 
     assigned_labels = torch.LongTensor(assigned_labels)
@@ -106,3 +111,6 @@ def cae_train(config: DictConfig):
         pur_val_std = np.std([purity(x, gt_ids) for x in assigned_labels])
         print(f'Purity: {pur_val_mean}+-{pur_val_std}')
         results['purity'] = (pur_val_mean, pur_val_std)
+        
+    exp_cae.save()
+    exp_cae.close()
