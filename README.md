@@ -12,34 +12,19 @@ Train deep clustering over sequences
 PYTONPATH='.' python3 run.py aux_module=deep_cluster +task_type=deep_clustering
 ```
 
-Default running
-```shell script
- PYTHONPATH='.' python run.py 
-```
 
-For multiprocess model
-```shell script
- PYTHONPATH='.' python run.py model=multi datamodule=default_index
-```
 
 Datasets:
-IPTV dataset
+Linkedin dataset
 Synthetic Hawkes processes realizations
 
 The dataset is taken from original [repo](https://github.com/VladislavZh/pp_clustering)
 
 
-Overall tasks of the project:
-1. Take the implementations on the two Github repositories to cluster sequences and merge them into a single repository: Cohortney, CAE, pure Cohortney, DMHP, DeepCluster, Optimal Transport.
-2. Design a standard API for all of these methods and a code structure that follows best practices using the Google Python Style Guide and formatting it with Black.
-3. Refactor the six methods with PyTorch Lightning as the main framework for the library.
-4. Introduce Ray to optimize all hyperparameters. PyTorch Lightning offers the necessary hooks for this.
-5. The execution should be fast, so either you use GPU acceleration or Ray (in addition to Ray for hyperparameter optimization). It also enables parallelization of the code whenever GPU acceleration is not possible.
-6. test coverage of 50% of the codebase.
-7. documentation for the API using readthedocs.
-8. examples on how to run each method.
-9. reproduce the experiment section of COHORTNEY with your new library on all six methods.
-10. pip package
+Overview os the project:
+The project is the implementations on the methods to cluster sequences taken from two Github repositories  in a single repository with the unified  API and code structure that follows best practises of formatting. The methods aare refactored with use if Pytorch Lightning framework so that execution of the methods is handy and fast with very deep range of configurable parameters both for the experiments and of hardware usage. 
+
+The validation results are stored by the link: ``` https://github.com/adasegroup/cohortney/tree/main/results(logs) ``` 
 
 More detailed information about the project may be found in the recent report(s).
 
