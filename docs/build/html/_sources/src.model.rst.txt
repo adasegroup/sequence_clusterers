@@ -1,0 +1,45 @@
+src.model package
+=================
+
+Submodules
+----------
+
+src.model.conv\_cluster module
+------------------------------
+
+.. automodule:: src.model.conv_cluster
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.model.deep\_clustering module
+---------------------------------
+
+.. automodule:: src.model.deep_clustering
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.model.multi\_pp\_cohortney module
+-------------------------------------
+
+.. automodule:: src.model.multi_pp_cohortney
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.model.single\_pp\_cohortney module
+--------------------------------------
+
+.. automodule:: src.model.single_pp_cohortney
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: src.model
+   :members:
+   :undoc-members:
+   :show-inheritance:

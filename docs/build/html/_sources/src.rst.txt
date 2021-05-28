@@ -1,0 +1,40 @@
+src package
+===========
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   src.dataset
+   src.model
+   src.networks
+   src.utils
+
+Submodules
+----------
+
+src.dataset\_generator module
+-----------------------------
+
+.. automodule:: src.dataset_generator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.train module
+----------------
+
+.. automodule:: src.train
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: src
+   :members:
+   :undoc-members:
+   :show-inheritance:

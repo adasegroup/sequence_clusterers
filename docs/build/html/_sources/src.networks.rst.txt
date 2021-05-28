@@ -1,0 +1,53 @@
+src.networks package
+====================
+
+Submodules
+----------
+
+src.networks.cae module
+-----------------------
+
+.. automodule:: src.networks.cae
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.networks.clustering module
+------------------------------
+
+.. automodule:: src.networks.clustering
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.networks.losses module
+--------------------------
+
+.. automodule:: src.networks.losses
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.networks.lstm\_pp module
+----------------------------
+
+.. automodule:: src.networks.lstm_pp
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.networks.seq\_cnn module
+----------------------------
+
+.. automodule:: src.networks.seq_cnn
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: src.networks
+   :members:
+   :undoc-members:
+   :show-inheritance:
