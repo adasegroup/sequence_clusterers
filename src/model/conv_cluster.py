@@ -24,6 +24,12 @@ log = get_logger(__name__)
 
 
 def cae_train(config: DictConfig):
+    """
+        Train module for convolutional autoencoder clustering for event sequences
+        every event first pass through pure cohortney module
+        then passed into encoder and clustered using KMeans over conv1d codes
+    """
+
     args = config.aux_module
     np.set_printoptions(threshold=10000)
     torch.set_printoptions(threshold=10000)

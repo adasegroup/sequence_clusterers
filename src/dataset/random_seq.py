@@ -11,6 +11,13 @@ from src.utils.datamodule import get_partition
 
 
 class RandomGeneratedSequences(Dataset):
+    """
+    This Dataset allows to work with different types of data in the same format:
+    - real world dataset like AgeClusterData or LinkedIn or IPTV dasets, which consist real sequences of different events
+    - generated data
+    There are two types of generated random data based on Hawkes process
+
+    """
     def __init__(self, path_to_csvs, num_of_event_types,
                  num_of_steps, predefined_step_size=False):
         self.path = path_to_csvs

@@ -10,6 +10,10 @@ import pytorch_lightning as pl
 
 
 class Conv1dAutoEncoder(pl.LightningModule):
+    """
+    Main block of convolutional event clustering
+    encoder-decoder architecture allows to create meaningful representation of chortney features
+    """
     def __init__(self
                  , in_channels: int
                  , n_latent_features: int):

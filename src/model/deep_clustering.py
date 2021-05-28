@@ -19,6 +19,14 @@ from src.utils.cohortney_utils import arr_func, multiclass_fws_array, events_ten
 
 
 def deep_cluster_train(config):
+    """
+    This module allows to use deep clustering techniques for event sequences
+    every step of the training deep features of the events extracted using convolutional encoder (CE)
+    then we cluster them using KMeans algorithm.
+    The top fully-connected layers of CE are changed with small classifier.
+    The labels of the clusters are used as pseudo-labels for supervised-manner training.
+    Such simple training method allows you to achieve good quality for clustering the initial events.
+    """
     args = config.aux_module
     exp_deep_cluster = Experiment(config.logger.test_tube.save_dir, config.logger.test_tube.name + '_deep_cluster' +'/'+ config.data_dir.split('/')[-1])
     exp_deep_cluster.tag({'deep_cluster': True})
