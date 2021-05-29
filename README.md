@@ -34,4 +34,5 @@ The validation results are stored by the link: ``` https://github.com/adasegroup
 
 More detailed information about the project may be found in the recent report(s).
 
+The documentation is available locally in docs/build/html/_modules/index.html 
 
