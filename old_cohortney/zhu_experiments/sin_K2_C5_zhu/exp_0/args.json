@@ -1,0 +1,1 @@
+{"data_dir": "../../../pp_clustering/data/sin_K2_C5", "nmb_cluster": 2, "gamma": 1.4, "Tb": 7e-06, "Th": 80, "N": 2500, "n": 8, "start_epoch": 0, "epochs": 5, "batch": 256, "lr": 0.001, "momentum": 0.9, "wd": 0.0001, "save_to": "sin_K2_C5_zhu", "seed": null, "workers": 4, "device": "cuda", "verbose": false, "nruns": 3, "type": null, "result_path": null}
