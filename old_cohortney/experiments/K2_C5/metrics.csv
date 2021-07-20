@@ -1,0 +1,6 @@
+time,-8.83188
+adjusted_mutual_info_score,"[1.0, 0.0]"
+adjusted_rand_score,"[1.0, 0.0]"
+fowlkes_mallows_score,"[1.0, 0.0]"
+v_measure_score,"[1.0, 0.0]"
+purities,"[1.0, 0.0]"
