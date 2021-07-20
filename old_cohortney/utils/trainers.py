@@ -54,10 +54,8 @@ class TrainerSingle:
     def train_epoch(self):
         """
         Conducts one epoch training
-
         input:
                None
-
         output:
                log_likelihood - list, list of all losses obtained during batch iterations
                mse - list, list of mean squared errors between obtained lambdas and lambdas of true model,
@@ -109,10 +107,8 @@ class TrainerSingle:
     def train(self):
         """
         Conducts training
-
         input:
                None
-
         output:
                losses - list, list of all mean log likelihoods obtained during training on each epoch
                val_losses - list, list of all log likelihoods obtained during training on each epoch on validation
@@ -218,7 +214,6 @@ class TrainerClusterwise:
                 max_computing_size - int, if not None, then constraints gamma size (one EM-algorithm step)
                 full_purity - bool, if True, purity is computed on all dataset
                 trial - optuna study object
-
         parameters:
                 N - int, number of data points
                 model - torch.nn.Module, model to train
@@ -299,12 +294,10 @@ class TrainerClusterwise:
     def loss(self, partitions, lambdas, gamma):
         """
         Computes loss
-
         inputs:
                 partitions - torch.Tensor, size = (batch_size, seq_len, number of classes + 1)
                 lambdas - torch.Tensor, size = (batch_size, seq_len, number of classes), model output
                 gamma - torch.Tensor, size = (n_clusters, batch_size), probabilities p(k|x_n)
-
         outputs:
                 loss - torch.Tensor, size = (1), sum of output log likelihood weighted with convoluted gamma
                        and prior distribution log likelihood
@@ -332,14 +325,12 @@ class TrainerClusterwise:
     def compute_gamma(self, lambdas, x=None, size=None, device="cpu"):
         """
         Computes gamma
-
         inputs:
                 lambdas - torch.Tensor, size = (batch_size or N, seq_len, number of classes), model output
                 x - torch.Tensor, size = (batch_size or N, seq_len, number of classes + 1),
                     data, that was processed or None
                 size - tuple, gamma size or None
                 device - device to compute
-
         outputs:
                 gamma - torch.Tensor, size = (n_clusters, batch_size or N), probabilities p(k|x_n)
         """
@@ -394,10 +385,8 @@ class TrainerClusterwise:
     def get_gamma_stats(self):
         """
         Obtains gamma (probabilities) stats
-
         inputs:
                 None
-
         outputs:
                 stats - dict:
                               stats['min'] - minimal probability per cluster
@@ -424,10 +413,8 @@ class TrainerClusterwise:
     def get_model_stats(self):
         """
         Obtains model parameters stats
-
         inputs:
                 None
-
         outputs:
                 stats - list of dicts:
                               stats[i]['min'] - minimal value in weighs of i-th parameter
@@ -454,10 +441,8 @@ class TrainerClusterwise:
     def get_lambda_stats(lambdas):
         """
         Obtains lambda stats
-
         inputs:
                 lambdas - torch.Tensor, size = (batch_size or N, seq_len, number of classes), model output
-
         outputs;
                 stats - dict:
                               stats['min'] - minimal value of lambdas in cluster for each type of event
@@ -480,10 +465,8 @@ class TrainerClusterwise:
     def e_step(self, ids=None):
         """
         Conducts E-step of EM-algorithms, saves the result to self.gamma
-
         inputs:
                 None
-
         outputs:
                 None
         """
@@ -501,10 +484,8 @@ class TrainerClusterwise:
     def train_epoch(self, big_batch=None):
         """
         Conducts one epoch of Neural Net training
-
         inputs:
                 None
-
         outputs:
                 log_likelihood - list of losses obtained during iterations over minibatches
         """
@@ -568,10 +549,8 @@ class TrainerClusterwise:
     def m_step(self, big_batch=None, ids=None):
         """
         Conducts M-step of EM-algorithm
-
         inputs:
                 None
-
         outputs:
                 log_likelihood_curve - list of floats, losses, obtained during iterations over M-step epochs
                                        and minibatches
@@ -719,10 +698,8 @@ class TrainerClusterwise:
     def train(self):
         """
         Conducts training
-
         inputs:
                 None
-
         outputs:
                 losses - list, list of losses obtained during training
                 purities - list of [loss, purity, cluster_partition]
@@ -1050,7 +1027,6 @@ class TrainerClusterwiseForNH:
                     best_model_path - str, where the best model according to loss should be saved or None
                     max_computing_size - int, if not None, then constraints gamma size (one EM-algorithm step)
                     fool_purity - bool, if True, purity is computed on all dataset
-
             parameters:
                     N - int, number of data points
                     model - torch.nn.Module, model to train
@@ -1127,14 +1103,12 @@ class TrainerClusterwiseForNH:
     def compute_gamma(self, likelihood):
         """
             Computes gamma
-
             inputs:
                     lambdas - torch.Tensor, size = (batch_size or N, seq_len, number of classes), model output
                     x - torch.Tensor, size = (batch_size or N, seq_len, number of classes + 1),
                         data, that was processed or None
                     size - tuple, gamma size or None
                     device - device to compute
-
             outputs:
                     gamma - torch.Tensor, size = (n_clusters, batch_size or N), probabilities p(k|x_n)
         """
@@ -1147,7 +1121,6 @@ class TrainerClusterwiseForNH:
     def convolve(self, gamma):
         """
             Convolves gamma along axis 0 with gaussian(0,sigma)
-
             inputs:
                     gamma - torch.Tensor, size = (n_clusters, batch_size), probabilities p(k|x_n)
             outputs:
@@ -1174,10 +1147,8 @@ class TrainerClusterwiseForNH:
     def e_step(self, ids=None):
         """
             Conducts E-step of EM-algorithms, saves the result to self.gamma
-
             inputs:
                     None
-
             outputs:
                     None
         """
@@ -1197,10 +1168,8 @@ class TrainerClusterwiseForNH:
     def train_epoch(self, big_batch=None):
         """
             Conducts one epoch of Neural Net training
-
             inputs:
                     None
-
             outputs:
                     log_likelihood - list of losses obtained during iterations over minibatches
         """
@@ -1250,10 +1219,8 @@ class TrainerClusterwiseForNH:
     def m_step(self,  big_batch=None, ids=None):
         """
             Conducts M-step of EM-algorithm
-
             inputs:
                     None
-
             outputs:
                     log_likelihood_curve - list of floats, losses, obtained during iterations over M-step epochs
                                            and minibatches
@@ -1357,10 +1324,8 @@ class TrainerClusterwiseForNH:
     def train(self):
         """
             Conducts training
-
             inputs:
                     None
-
             outputs:
                     losses - list, list of losses obtained during training
                     purities - list of [loss, purity, cluster_partition]

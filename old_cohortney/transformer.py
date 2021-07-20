@@ -98,7 +98,7 @@ if __name__ == '__main__':
                                                args.n_clusters, args.n_steps, dropout=args.dropout).to(args.device)
             optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
             best_model_path = path_to_results+  '/event_{}'.format(t) +  '/exp_{}'.format(i) + '/best_model.pt'
-            os.mkdir(path_to_results +  '/event_{}'.format(t)+'/exp_{}'.format(i))
+            #os.mkdir(path_to_results +  '/event_{}'.format(t)+'/exp_{}'.format(i))
             exp_folder = path_to_results +  '/event_{}'.format(t) + '/exp_{}'.format(i)
             trainer = TrainerClusterwise(model, optimizer, args.device, data[:,:,:] , args.n_clusters, target=target,
                                          epsilon=args.epsilon, max_epoch=args.max_epoch,
@@ -110,37 +110,23 @@ if __name__ == '__main__':
                                          batch_size=args.batch_size, verbose=args.verbose,
                                          best_model_path=best_model_path if args.save_best_model else None,
                                          max_computing_size=args.max_computing_size, full_purity=args.full_purity, exper_path=exp_folder)
-            losses, results, cluster_part, stats, clusters_pred = trainer.train()
-            pred[t, :] = clusters_pred
-            # results check
-            if cluster_part is None:
-                if args.verbose:
-                    print('Solution failed')
-                continue
+        losses, results, cluster_part, stats = trainer.train()
 
-            # saving results
-            with open(exp_folder + '/losses.pkl', 'wb') as f:
-                pickle.dump(losses, f)
-            with open(exp_folder + '/results.pkl', 'wb') as f:
-                pickle.dump(results, f)
-            with open(exp_folder + '/stats.pkl', 'wb') as f:
-                pickle.dump(stats, f)
-            with open(exp_folder + '/args.json', 'w') as f:
-                json.dump(vars(args), f)
-            labels = {"labels": clusters_pred}
-            with open(exp_folder + '/labels.csv', 'w') as f:
-                f.write("%s\n"%(labels))
-
-            torch.save(trainer.model, exp_folder + '/last_model.pt')
-            i += 1
-    clusters = numpy.zeros(list(data.size())[1])
-    for i in range (list(data.size())[1]):
-        clus = pred[:,i].cpu().detach().numpy()
-        clusters[i] = max(set(list(clus)), key = list(clus).count)    
-    pur = purity(torch.from_numpy(clusters), target.to('cpu'))
-    info = info_score(torch.from_numpy(clusters),
-                      target.to('cpu'), len(numpy.unique(target.to('cpu'))))
-    res = {"purity": pur, "info": info, "labels": clusters}
-    with open(f'{path_to_results}/results.csv', 'w') as f:
-        for key in res.keys():
-            f.write("%s,%s\n"%(key,res[key]))
+        # results check
+        if cluster_part is None:
+            if args.verbose:
+                print("Solution failed")
+            continue
+        print ("Results \n" , results)
+        print ("stats", stats)
+        # saving results
+        with open(exp_folder + "/losses.pkl", "wb") as f:
+            pickle.dump(losses, f)
+        with open(exp_folder + "/results.pkl", "wb") as f:
+            pickle.dump(results, f)
+        with open(exp_folder + "/stats.pkl", "wb") as f:
+            pickle.dump(stats, f)
+        with open(exp_folder + "/args.json", "w") as f:
+            json.dump(vars(args), f)
+        torch.save(trainer.model, exp_folder + "/last_model.pt")
+        i += 1
