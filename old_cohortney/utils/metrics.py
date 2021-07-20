@@ -4,7 +4,11 @@
 import torch
 from sklearn.metrics.cluster import normalized_mutual_info_score
 import numpy as np
-
+from sklearn.metrics.cluster import adjusted_mutual_info_score
+from sklearn.metrics.cluster import rand_score
+from sklearn.metrics.cluster import adjusted_rand_score
+from sklearn.metrics.cluster import v_measure_score #(labels_true, labels_pred, beta=1.0)
+from sklearn.metrics.cluster import fowlkes_mallows_score
 
 def log_likelihood_single(partitions, lambdas, dts):
     """
