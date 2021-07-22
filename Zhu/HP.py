@@ -3,7 +3,7 @@ This file contains PyTorch implementation of methods from A Dirichlet Mixture Mo
 of Hawkes Processes for Event Sequence Clustering
 https://arxiv.org/pdf/1701.09177.pdf
 """
-
+import os
 import torch
 import numpy as np
 from tqdm import tqdm, trange
@@ -11,8 +11,16 @@ from typing import List
 from torch.nn import functional as F
 import random
 import scipy.integrate as integrate
-
-
+import time
+from metrics import consistency, purity
+import pandas as pd
+def create_folder(path_to_folder, rewrite=False):
+    if os.path.exists(path_to_folder) and os.path.isdir(path_to_folder):
+        if not rewrite:
+            return False
+        clear_folder(path_to_folder)
+        return True
+    os.mkdir(path_to_folder)
 def tune_basis_fn(ss, eps=1e5, not_tune=False):
     if not not_tune:
         w0_arr = np.linspace(0, 15, 1000) # 15
@@ -194,21 +202,26 @@ class EM_clustering:
 
         self.gg = []
 
-    def learn_hp(self, niter=100, ninner=None):
+    def learn_hp(self, niter, save, gt_ids, ninner):
         ninner = ninner if ninner is not None else self.n_inner
         if isinstance(ninner, int):
             ninner = [ninner]*niter
         assert len(ninner) == niter
 
         nll_history = []
+        times = []
         r_history = torch.empty(niter, self.N, self.K)
         r = torch.rand(self.N, self.K)
         r = r / r.sum(1)[:, None]
+        puritys = []
+        cluster_partitions = []
         for i, nin in tqdm(enumerate(ninner)):
+            create_folder(save + '/epoch_{}'.format(i))
+            exp_folder = save + '/epoch_{}'.format(i)
             # commented so far - can't compute real nll
             # mu, A = self.m_step(r, nin)
             # nll1 = self.hp_nll(r.sum(0) / self.N, mu, A)
-
+            time_start = time.clock()
             r2 = self.e_step()
             print ('e_step ready')
             mu2, A2 = self.m_step(r2, nin)
@@ -226,8 +239,23 @@ class EM_clustering:
                 self.update_model(pi, mu2, A2)
             r_history[i] = r
             nll_history.append(nll1.item())
+            neg_ll = nll1.item()
+            times.append((time_start - time.clock())*20)
+            label = r.argmax(-1)
+            puritys.append(purity(label, gt_ids))
+            cluster_partition = 2
+            for i in np.unique(gt_ids):
+                
+                cluster_partition = min(cluster_partition, (np.sum(label == [i]*len(gt_ids))) / len(gt_ids))
+                print("i", i, " clusterparition: ", cluster_partition)
+            cluster_partitions.append(cluster_partition)
+       
+         
             print(f'\nNLL / N: {(nll1.item() / self.N):.4f}')
-
+        data = {"epoch": np.arange(len(cluster_partitions)), "times": times, "negative ll": nll_history, "purity": puritys, "cluster_partition": cluster_partitions}
+        res = pd.DataFrame(data = data)
+        savepath = os.path.join(save, "zhu.csv")
+        res.to_csv(savepath)
             # commented so far - can't compute real nll
             # K = self.K
             # print('\n', self.K)

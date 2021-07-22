@@ -42,7 +42,7 @@ def load_data(data_dir):
     ss, Ts = [], []
     for i in range(1, seq_nmb+1):
       user_dict = dict()
-      f = pd.read_csv(Path(data_dir, f'{i}.csv'))[:5]
+      f = pd.read_csv(Path(data_dir, f'{i}.csv'))
       if f[time_col].to_numpy()[-1] < 0:
              continue
     
