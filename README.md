@@ -1,6 +1,6 @@
-# Cohortney
+# Sequence Clusterers
 
-Framework for Deep Clustering of Heterogeneous Event Sequences.
+Framework with Methods for Deep Clustering of Heterogeneous Event Sequences.
 
 For conv1d AutoEncoder over sequences
 ```shell script
