@@ -17,6 +17,7 @@ def load_data_kshape(
     time_col: str = "time",
     event_col: str = "event",
     ext: str = "csv",
+    max_length: int = 100
 ):
     """
     Loads the sequences saved in the given directory.
@@ -26,6 +27,7 @@ def load_data_kshape(
         time_col - title of time column
         event_col - title of event column
         ext - extension of individual sequence file
+        max_length - limit of sequence length
     """
 
     files_with_digits = sorted(
@@ -34,43 +36,45 @@ def load_data_kshape(
         if re.sub(fr".{ext}", "", x).isdigit()
         else 0,
     )
+    
+    # getting all event types
 
-    length = 0
-    # remake all_events with set/dict
-    all_events = []
+    all_events = set()
+    seq_max_length = 0
     for file in files_with_digits:
         if file.endswith(f".{ext}") and re.sub(fr".{ext}", "", file).isnumeric():
             sequence_file = pd.read_csv(Path(data_dir, file))
-            length = max(length, len(sequence_file[event_col]))
-            for event in sequence_file[event_col].to_numpy():
-                all_events.append(event)
-    events_arr = np.unique(all_events)
-
-    data = []
+            seq_max_length = max(seq_max_length, len(sequence_file))
+            all_events = all_events.union(set(sequence_file[event_col].unique()))
+   
+    # max len of sequence
+    max_length = min(max_length, seq_max_length)
+    events_arr = list(all_events)
+    print(events_arr)
     ts = []
-
     for file in files_with_digits:
         if file.endswith(f".{ext}") and re.sub(fr".{ext}", "", file).isnumeric():
             sequence_file = pd.read_csv(Path(data_dir, file))
             if sequence_file[time_col].to_numpy()[-1] < 0:
                 continue
-            for event_type in range(len(events_arr)):
-                d = np.zeros(length)
-                print("d shape", d.shape)
-                dat = sequence_file[sequence_file[event_col] == events_arr[event_type]][
+            data = []
+            for event_type in events_arr:
+                d = np.zeros(max_length)
+                dat = sequence_file[sequence_file[event_col] == event_type][
                     time_col
                 ].to_numpy()
-                # remake for-loop into single operation
-                for k in range(len(dat)):
-                    d[k] = dat[k]
+                curr_l = min(max_length, len(dat))
+                d[:curr_l] = dat[:curr_l] 
                 data.append(d)
-            ts.append(np.asarray(data))
-
+            ts.append(np.array(data))
+    
     # transforming data
-    ts = to_time_series_dataset((np.asarray(ts)))
-    ts_reshaped = np.zeros((len(ts), all_events, ts.shape[2]))
+    ts = np.array(ts)
+    print(ts.shape)
+    ts = to_time_series_dataset(ts)
+    ts_reshaped = np.zeros((len(ts), num_events, ts.shape[2]))
     for i in range(len(ts)):
-        ts_reshaped[i] = ts[i][:all_events]
+        ts_reshaped[i] = ts[i][:num_events]
     print("Data processing completed")
 
     return ts_reshaped
