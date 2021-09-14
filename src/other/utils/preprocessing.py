@@ -2,7 +2,7 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union, Optional
 from tslearn.utils import to_time_series_dataset
 
 import numpy as np
@@ -17,7 +17,7 @@ def load_data_kshape(
     time_col: str = "time",
     event_col: str = "event",
     ext: str = "csv",
-    max_length: int = 100
+    max_length: int = 100,
 ):
     """
     Loads the sequences saved in the given directory.
@@ -36,7 +36,7 @@ def load_data_kshape(
         if re.sub(fr".{ext}", "", x).isdigit()
         else 0,
     )
-    
+
     # getting all event types
 
     all_events = set()
@@ -46,11 +46,10 @@ def load_data_kshape(
             sequence_file = pd.read_csv(Path(data_dir, file))
             seq_max_length = max(seq_max_length, len(sequence_file))
             all_events = all_events.union(set(sequence_file[event_col].unique()))
-   
+
     # max len of sequence
     max_length = min(max_length, seq_max_length)
     events_arr = list(all_events)
-    print(events_arr)
     ts = []
     for file in files_with_digits:
         if file.endswith(f".{ext}") and re.sub(fr".{ext}", "", file).isnumeric():
@@ -64,13 +63,12 @@ def load_data_kshape(
                     time_col
                 ].to_numpy()
                 curr_l = min(max_length, len(dat))
-                d[:curr_l] = dat[:curr_l] 
+                d[:curr_l] = dat[:curr_l]
                 data.append(d)
             ts.append(np.array(data))
-    
+
     # transforming data
     ts = np.array(ts)
-    print(ts.shape)
     ts = to_time_series_dataset(ts)
     ts_reshaped = np.zeros((len(ts), num_events, ts.shape[2]))
     for i in range(len(ts)):
@@ -81,36 +79,46 @@ def load_data_kshape(
 
 
 def load_data_dmhp(
-    data_dir: str,
+    data_dir: Union[str, Path],
+    maxsize: Optional[int],
+    maxlen: int = -1,
+    ext: str = "txt",
     time_col: str = "time",
     event_col: str = "event",
-    ext: str = "csv",
-) -> Tuple[List[torch.Tensor], torch.Tensor, Dict, torch.Tensor]:
+    datetime: bool = True,
+    type_=None,
+) -> Tuple[List[torch.Tensor], torch.Tensor, Dict, List[Dict], torch.Tensor]:
     """
-    Loads the sequences from the given directory.
+    Loads the sequences saved in the given directory.
+
+    Args:
+        data_dir    - directory containing sequences
+        maxsize     - maximum number of sequences to load
+        maxlen      - maximum length of sequence, the sequences longer than maxlen will be truncated
+        ext         - extension of files in data_dir directory
+        time_col    - title of column with timestamps
+        event_col   - title of column with event types
+        datetime    - variable indicating if time values in files are represented in datetime format
+
     Returns:
-        ss - list of torch.Tensor containing sequences. Each tensor has shape (L, 2), where
-            element is a sequence of pair (time, event type);
-        Ts - tensor of right edges T_n of intervals (0, T_n) for each point process;
-        class2idx  - dict of event types and their indexes;
-        gt_ids - torch.Tensor of ground truth cluster labels (if available);
-        ? (not there) user_list - representation of sequences suitable for Cohortney
+        ss          - list of torch.Tensor containing sequences. Each tensor has shape (L, 2), where
+                        element is a sequence of pair (time, event type)
+        Ts          - tensor of right edges T_n of interavls (0, T_n) in which point processes realizations lie.
+        class2idx   - dict of event types and their indices
+        user_list   - representation of sequences suitable for Cohortney
+        gt_ids      - torch.Tensor of ground truth cluster labels (if available)
 
     """
 
-    with open(Path(data_dir, "info.json")) as info:
-        info = json.load(info)
-    # seq_nmb is not used anywhere
-    # seq_nmb = info["seq_nmb"]
-    gt_ids = None
-    if Path(data_dir, "clusters.csv").exists():
-        gt_ids = pd.read_csv(Path(data_dir, "clusters.csv"))["cluster_id"].to_numpy()
-        gt_ids = torch.LongTensor(gt_ids)
-
-    classes = info["classes"]
-    class2idx = {cl: idx for idx, cl in enumerate(classes)}
-
-    ss, Ts = [], []
+    sequences = []
+    classes = set()
+    nb_files = 0
+    # if type_ == "booking1":
+    #     time_col = "checkin"
+    #     event_col = "city_id"
+    # elif type_ == "booking2":
+    #     time_col = "checkout"
+    #     event_col = "city_id"
 
     for file in sorted(
         os.listdir(data_dir),
@@ -119,23 +127,55 @@ def load_data_dmhp(
         else 0,
     ):
         if file.endswith(f".{ext}") and re.sub(fr".{ext}", "", file).isnumeric():
+            if maxsize is None or nb_files <= maxsize:
+                nb_files += 1
+            else:
+                break
 
-            f = pd.read_csv(Path(data_dir, file))
-            if f[time_col].to_numpy()[-1] < 0:
-                continue
+            df = pd.read_csv(Path(data_dir, file))
+            classes = classes.union(set(df[event_col].unique()))
+            if datetime:
+                df[time_col] = pd.to_datetime(df[time_col])
+                df[time_col] = (df[time_col] - df[time_col][0]) / np.timedelta64(1, "D")
+            if maxlen > 0:
+                df = df.iloc[:maxlen]
 
-            f[event_col].replace(class2idx, inplace=True)
-            # for event_type in class2idx.values():
-            #    dat = f[f[event_col] == event_type]
+            sequences.append(df)
 
-            st = np.vstack([f[time_col].to_numpy(), f[event_col].to_numpy()])
-            tens = torch.FloatTensor(st.astype(np.float32)).T
-            ss.append(tens)
-            Ts.append(tens[-1, 0])
+    classes = list(classes)
+    class2idx = {cls: idx for idx, cls in enumerate(classes)}
+
+    ss, Ts = [], []
+    user_list = []
+    for i, df in enumerate(sequences):
+        user_dict = dict()
+        if sequences[i][time_col].to_numpy()[-1] < 0:
+            continue
+        sequences[i][event_col].replace(class2idx, inplace=True)
+        for event_type in class2idx.values():
+            dat = sequences[i][sequences[i][event_col] == event_type]
+            user_dict[event_type] = dat[time_col].to_numpy()
+        user_list.append(user_dict)
+
+        st = np.vstack(
+            [sequences[i][time_col].to_numpy(), sequences[i][event_col].to_numpy()]
+        )
+        tens = torch.FloatTensor(st.astype(np.float32)).T
+
+        if maxlen > 0:
+            tens = tens[:maxlen]
+        ss.append(tens)
+        Ts.append(tens[-1, 0])
 
     Ts = torch.FloatTensor(Ts)
+
+    gt_ids = None
+    if Path(data_dir, "clusters.csv").exists():
+        gt_ids = pd.read_csv(Path(data_dir, "clusters.csv"))["cluster_id"].to_numpy()
+        gt_ids = torch.LongTensor(gt_ids)
     print("Data processing completed")
-    return ss, Ts, class2idx, gt_ids
+
+    return ss, Ts, class2idx, user_list, gt_ids
 
 
 def tune_basis_fn(ss, eps=1e5, tune=True):
