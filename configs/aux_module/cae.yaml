@@ -1,9 +1,9 @@
 data_dir: ${data_dir}
 maxsize: null
-nmb_cluster: 3
+nmb_cluster: 2
 maxlen: -1
 ext: "csv"
-not_datetime: True
+datetime: False
 gamma: 1.4
 Tb: 7e-06
 Th: 80
@@ -18,7 +18,7 @@ wd: 0.0001
 seed: 42
 workers: 4
 device: "cpu"
-verbose: true
+verbose: True
 nruns: 3
 type: null
 result_path: null

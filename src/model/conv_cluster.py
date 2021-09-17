@@ -25,24 +25,28 @@ log = get_logger(__name__)
 
 def cae_train(config: DictConfig):
     """
-        Train module for convolutional autoencoder clustering for event sequences
-        every event first pass through pure cohortney module
-        then passed into encoder and clustered using KMeans over conv1d codes
+    Train module for convolutional autoencoder clustering for event sequences
+    every event first pass through pure cohortney module
+    then passed into encoder and clustered using KMeans over conv1d codes
     """
 
     args = config.aux_module
     np.set_printoptions(threshold=10000)
     torch.set_printoptions(threshold=10000)
-    
-    exp_cae = Experiment(config.logger.test_tube.save_dir, config.logger.test_tube.name +'/'+ config.data_dir.split('/')[-1])
 
-    ss, Ts, class2idx, user_list = load_data(Path(config.data_dir), maxsize=args.maxsize, maxlen=args.maxlen,
-                                             ext=args.ext, datetime=not args.not_datetime, type_=args.type)
+    exp_cae = Experiment(
+        config.logger.test_tube.save_dir,
+        config.logger.test_tube.name + "/" + config.data_dir.split("/")[-1],
+    )
 
-    gt_ids = None
-    if Path(args.data_dir, 'clusters.csv').exists():
-        gt_ids = pd.read_csv(Path(args.data_dir, 'clusters.csv'))['cluster_id'].to_numpy()
-        gt_ids = torch.LongTensor(gt_ids)
+    ss, Ts, class2idx, user_list, gt_ids = load_data(
+        Path(config.data_dir),
+        maxsize=args.maxsize,
+        maxlen=args.maxlen,
+        ext=args.ext,
+        datetime=args.datetime,
+        type_=args.type,
+    )
 
     # grid generation
     grid = make_grid(args.gamma, args.Tb, args.Th, args.N, args.n)
@@ -56,9 +60,7 @@ def cae_train(config: DictConfig):
     mc_batch = events_tensor(events_fws_mc)
 
     assigned_labels = []
-    model = Conv1dAutoEncoder(in_channels=mc_batch.shape[1],
-                              n_latent_features=16)  #
-
+    model = Conv1dAutoEncoder(in_channels=mc_batch.shape[1], n_latent_features=16)  #
 
     callbacks: List[Callback] = []
     if "callbacks" in config:
@@ -73,50 +75,55 @@ def cae_train(config: DictConfig):
                 log.info(f"Instantiating logger <{lg_conf._target_}>")
                 logger.append(hydra.utils.instantiate(lg_conf))
 
-
     trainer: Trainer = hydra.utils.instantiate(
         config.trainer, callbacks=None, logger=None, _convert_="partial"
     )
 
-    
     train_data_batch = DataLoader(mc_batch, batch_size=args.batch)
     val_data_batch = DataLoader(mc_batch, batch_size=args.batch)
 
     trainer.fit(model, train_data_batch, val_data_batch)
-    
+
     ans = model.encoder(mc_batch)
     X = ans.cpu().squeeze().detach().numpy()
     X_trained = X.reshape(X.shape[0], X.shape[1] * X.shape[2])
 
     results = {}
 
-    kmeans = KMeans(n_clusters=args.nmb_cluster, init='k-means++', max_iter=500, n_init=10, random_state=0)
+    kmeans = KMeans(
+        n_clusters=args.nmb_cluster,
+        init="k-means++",
+        max_iter=500,
+        n_init=10,
+        random_state=0,
+    )
     pred_y = kmeans.fit_predict(X_trained)
 
     assigned_labels.append(pred_y)
     if args.verbose:
         print(
-            f'Sizes of clusters: {", ".join([str((torch.tensor(pred_y) == i).sum().item()) for i in range(args.nmb_cluster)])}\n')
+            f'Sizes of clusters: {", ".join([str((torch.tensor(pred_y) == i).sum().item()) for i in range(args.nmb_cluster)])}\n'
+        )
     print("preds:", pred_y)
 
     pred_y = torch.LongTensor(pred_y)
     if gt_ids is not None:
         print("reals:", gt_ids)
         pur = purity(pred_y, gt_ids)
-        exp_cae.log({'purity': pur})
-        print(f'\nPurity: {pur:.4f}')
+        exp_cae.log({"purity": pur})
+        print(f"\nPurity: {pur:.4f}")
 
     assigned_labels = torch.LongTensor(assigned_labels)
     cons = consistency(assigned_labels)
 
-    print(f'\nConsistency: {cons:.4f}')
-    results['consistency'] = cons
+    print(f"\nConsistency: {cons:.4f}")
+    results["consistency"] = cons
 
     if gt_ids is not None:
         pur_val_mean = np.mean([purity(x, gt_ids) for x in assigned_labels])
         pur_val_std = np.std([purity(x, gt_ids) for x in assigned_labels])
-        print(f'Purity: {pur_val_mean}+-{pur_val_std}')
-        results['purity'] = (pur_val_mean, pur_val_std)
-        
+        print(f"Purity: {pur_val_mean}+-{pur_val_std}")
+        results["purity"] = (pur_val_mean, pur_val_std)
+
     exp_cae.save()
     exp_cae.close()

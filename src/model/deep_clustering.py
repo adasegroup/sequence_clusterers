@@ -35,7 +35,7 @@ def deep_cluster_train(config):
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     ss, _, class2idx, user_list = load_data(Path(config.data_dir), maxsize=args.maxsize, maxlen=args.maxlen,
-                                            ext=args.ext, datetime=not args.not_datetime, type_=args.type)
+                                            ext=args.ext, datetime=args.datetime, type_=args.type)
 
     grid = make_grid(args.gamma, args.Tb, args.Th, args.N, args.n)
     T_j = grid[-1]

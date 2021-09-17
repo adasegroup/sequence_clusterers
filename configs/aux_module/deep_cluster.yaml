@@ -3,7 +3,7 @@ maxsize: null
 nmb_cluster: 3
 maxlen: -1
 ext: "csv"
-not_datetime: True
+datetime: False
 gamma: 1.4
 Tb: 7e-06
 Th: 80
