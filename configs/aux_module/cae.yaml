@@ -11,7 +11,7 @@ N: 2500
 n: 8
 start_epoch: 0
 epochs: 30
-batch: 128
+batch_size: 128
 lr: 0.001
 momentum: 0.9
 wd: 0.0001

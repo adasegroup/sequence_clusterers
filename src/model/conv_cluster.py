@@ -2,22 +2,16 @@ from typing import List
 
 import hydra
 import numpy as np
-import pandas as pd
-
 import torch
-from torch.utils.data import DataLoader
-from test_tube import Experiment
-from pathlib import Path
 from omegaconf import DictConfig
 from pytorch_lightning import Callback, Trainer
 from pytorch_lightning.loggers import LightningLoggerBase
 from sklearn.cluster import KMeans
+from test_tube import Experiment
 
-from src.utils import get_logger
+from src.datamodules.datamodule import CohortneyDataModule
 from src.networks import Conv1dAutoEncoder
-from src.utils import make_grid
-from src.utils.cohortney_utils import arr_func, events_tensor, multiclass_fws_array
-from src.utils.datamodule import load_data
+from src.utils import get_logger
 from src.utils.metrics import consistency, purity
 
 log = get_logger(__name__)
@@ -39,29 +33,6 @@ def cae_train(config: DictConfig):
         config.logger.test_tube.name + "/" + config.data_dir.split("/")[-1],
     )
 
-    ss, Ts, class2idx, user_list, gt_ids = load_data(
-        Path(config.data_dir),
-        maxsize=args.maxsize,
-        maxlen=args.maxlen,
-        ext=args.ext,
-        datetime=args.datetime,
-        type_=args.type,
-    )
-
-    # grid generation
-    grid = make_grid(args.gamma, args.Tb, args.Th, args.N, args.n)
-
-    T_j = grid[-1]
-    Delta_T = np.linspace(0, grid[-1], 2 ** args.n)
-    Delta_T = Delta_T[Delta_T < int(T_j)]
-    delta_T = tuple(Delta_T)
-
-    _, events_fws_mc = arr_func(user_list, T_j, delta_T, multiclass_fws_array)
-    mc_batch = events_tensor(events_fws_mc)
-
-    assigned_labels = []
-    model = Conv1dAutoEncoder(in_channels=mc_batch.shape[1], n_latent_features=16)  #
-
     callbacks: List[Callback] = []
     if "callbacks" in config:
         for _, cb_conf in config["callbacks"].items():
@@ -79,16 +50,22 @@ def cae_train(config: DictConfig):
         config.trainer, callbacks=None, logger=None, _convert_="partial"
     )
 
-    train_data_batch = DataLoader(mc_batch, batch_size=args.batch)
-    val_data_batch = DataLoader(mc_batch, batch_size=args.batch)
+    cohortney_dm = CohortneyDataModule(args, config.data_dir)
+    cohortney_dm.prepare_data()
+    cohortney_dm.setup(stage="fit")
 
-    trainer.fit(model, train_data_batch, val_data_batch)
+    model = Conv1dAutoEncoder(
+        in_channels=cohortney_dm.train_data.shape[1], n_latent_features=16
+    )
+    trainer.fit(model, cohortney_dm)
 
-    ans = model.encoder(mc_batch)
+    # inference - to be refactored
+    ans = model.encoder(cohortney_dm.train_data)
     X = ans.cpu().squeeze().detach().numpy()
     X_trained = X.reshape(X.shape[0], X.shape[1] * X.shape[2])
 
     results = {}
+    assigned_labels = []
 
     kmeans = KMeans(
         n_clusters=args.nmb_cluster,
@@ -107,6 +84,7 @@ def cae_train(config: DictConfig):
     print("preds:", pred_y)
 
     pred_y = torch.LongTensor(pred_y)
+    gt_ids = cohortney_dm.gt_ids
     if gt_ids is not None:
         print("reals:", gt_ids)
         pur = purity(pred_y, gt_ids)
