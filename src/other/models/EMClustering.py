@@ -1,12 +1,13 @@
-from DirichletMixtureModel import DirichletMixtureModel
-from PointProcess import PointProcess
-from tqdm import tqdm, trange
-from torch.nn import functional as F
+import random
 
 import numpy as np
-import random
-import torch
 import scipy.integrate as integrate
+import torch
+from torch.nn import functional as F
+from tqdm import tqdm, trange
+
+from models.DirichletMixtureModel import DirichletMixtureModel
+from models.PointProcess import PointProcess
 
 
 def integral(f, left, right, npts=10000):
@@ -194,7 +195,6 @@ class EMClustering:
         A = self.model.Sigma
         Sigma = self.model.Sigma
         C = mu.shape[0]
-
         for _ in range(niter):
             b = torch.zeros(self.K)
             c = -1 * torch.ones(self.C, self.K)

@@ -1,10 +1,11 @@
 from pathlib import Path
 from typing import Dict, List, Tuple
-from utils.preprocessing import tune_basis_fn
 
 import numpy as np
 import pandas as pd
 import torch
+
+from utils.preprocessing import tune_basis_fn
 
 
 class PointProcess:

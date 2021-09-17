@@ -80,9 +80,9 @@ def load_data_kshape(
 
 def load_data_dmhp(
     data_dir: Union[str, Path],
-    maxsize: Optional[int],
+    maxsize: Optional[int] = None,
     maxlen: int = -1,
-    ext: str = "txt",
+    ext: str = "csv",
     time_col: str = "time",
     event_col: str = "event",
     datetime: bool = True,

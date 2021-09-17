@@ -1,14 +1,17 @@
-from pathlib import Path
 import argparse
-import torch
-import numpy as np
+import json
+import sys
 import time
+from pathlib import Path
 
-from models import DirichletMixtureModel, PointProcess, EMClustering
+import numpy as np
+import torch
+
+from models.DirichletMixtureModel import DirichletMixtureModel
+from models.EMClustering import EMClustering
+from models.PointProcess import PointProcess
 from utils.metrics import consistency, purity, update_info_score
 from utils.preprocessing import load_data_dmhp
-import sys
-import json
 
 
 def random_seed(seed):
@@ -27,7 +30,7 @@ def parse_arguments():
         help="dir holding sequences as separate files",
     )
     parser.add_argument(
-        "--nmb_cluster", type=int, default=10, help="number of clusters"
+        "--num_cluster", type=int, default=10, help="number of clusters"
     )
     # hyperparameters for Cohortney
     parser.add_argument("--gamma", type=float, default=1.4)
@@ -71,14 +74,13 @@ if __name__ == "__main__":
         random_seed(args.seed)
 
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
-    ss, Ts, class2idx, gt_ids = load_data_dmhp(Path(args.data_dir))
-    # N = len(ss)
+    ss, Ts, class2idx, user_list, gt_ids = load_data_dmhp(Path(args.data_dir))
 
     hawkes_process = PointProcess(ss, Ts, eps=1e5, tune=False)
     # the dimension of Hawkes processes
     D = len(hawkes_process.basis_fs)
     C = len(class2idx)
-    K = args.nmb_cluster
+    K = args.num_cluster
     # parameter for inner iterations of EM
     niter = 10
     labels = torch.zeros(args.nruns, len(ss))
@@ -91,7 +93,7 @@ if __name__ == "__main__":
     for i in range(args.nruns):
         print(f"============= RUN {i+1} ===============")
         time_start = time.time()
-        dirichlet_mixture_model = DirichletMixtureModel(K, C, D)
+        dirichlet_mixture_model = DirichletMixtureModel(K, C, D, alpha=1.0)
         print("Dirichlet Mixture Model is initiated")
         EM = EMClustering(hawkes_process, dirichlet_mixture_model)
         print("EM clustering model is initiated")
