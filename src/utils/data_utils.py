@@ -10,6 +10,7 @@ import pandas as pd
 
 from pathlib import Path
 from typing import Union, List, Optional, Tuple, Dict
+from tslearn.utils import to_time_series_dataset
 
 
 DATASET_URLS = {
@@ -152,6 +153,73 @@ def load_data(
         gt_ids = torch.LongTensor(gt_ids)
 
     return ss, Ts, class2idx, user_list, gt_ids
+
+
+def load_data_kshape(
+    data_dir,
+    num_events: int,
+    time_col: str = "time",
+    event_col: str = "event",
+    ext: str = "csv",
+    max_length: int = 100,
+):
+    """
+    Loads the sequences saved in the given directory.
+    Args:
+        data_dir    (str, Path) - directory containing sequences
+        num_events - number of different event types
+        time_col - title of time column
+        event_col - title of event column
+        ext - extension of individual sequence file
+        max_length - limit of sequence length
+    """
+
+    files_with_digits = sorted(
+        os.listdir(data_dir),
+        key=lambda x: int(re.sub(fr".{ext}", "", x))
+        if re.sub(fr".{ext}", "", x).isdigit()
+        else 0,
+    )
+
+    # getting all event types
+
+    all_events = set()
+    seq_max_length = 0
+    for file in files_with_digits:
+        if file.endswith(f".{ext}") and re.sub(fr".{ext}", "", file).isnumeric():
+            sequence_file = pd.read_csv(Path(data_dir, file))
+            seq_max_length = max(seq_max_length, len(sequence_file))
+            all_events = all_events.union(set(sequence_file[event_col].unique()))
+
+    # max len of sequence
+    max_length = min(max_length, seq_max_length)
+    events_arr = list(all_events)
+    ts = []
+    for file in files_with_digits:
+        if file.endswith(f".{ext}") and re.sub(fr".{ext}", "", file).isnumeric():
+            sequence_file = pd.read_csv(Path(data_dir, file))
+            if sequence_file[time_col].to_numpy()[-1] < 0:
+                continue
+            data = []
+            for event_type in events_arr:
+                d = np.zeros(max_length)
+                dat = sequence_file[sequence_file[event_col] == event_type][
+                    time_col
+                ].to_numpy()
+                curr_l = min(max_length, len(dat))
+                d[:curr_l] = dat[:curr_l]
+                data.append(d)
+            ts.append(np.array(data))
+
+    # transforming data
+    ts = np.array(ts)
+    ts = to_time_series_dataset(ts)
+    ts_reshaped = np.zeros((len(ts), num_events, ts.shape[2]))
+    for i in range(len(ts)):
+        ts_reshaped[i] = ts[i][:num_events]
+    print("Data processing completed")
+
+    return ts_reshaped
 
 
 def sep_hawkes_proc(user_list, event_type):

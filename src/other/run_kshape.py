@@ -31,10 +31,16 @@ def parse_arguments():
         required=True,
         help="dir holding sequences as separate files",
     )
-    parser.add_argument("--num_clusters", type=int, required=True, help="number of clusters")
-    parser.add_argument("--num_events", type=int, required=True, help="number of events")
+    parser.add_argument(
+        "--num_clusters", type=int, required=True, help="number of clusters"
+    )
+    parser.add_argument(
+        "--num_events", type=int, required=True, help="number of events"
+    )
     parser.add_argument("--num_runs", type=int, default=10, help="number of runs")
-    parser.add_argument("--exp_path", type=str, required=True, help="path to save results")
+    parser.add_argument(
+        "--exp_path", type=str, required=True, help="path to save results"
+    )
     args = parser.parse_args()
     return args
 
@@ -52,7 +58,9 @@ if __name__ == "__main__":
     # ground truth labels
     gt_ids = None
     if Path(args.data_dir, "cluster.csv").exists():
-        gt_ids = pd.read_csv(Path(args.data_dir, "clusters.csv"))["cluster_id"].to_numpy()
+        gt_ids = pd.read_csv(Path(args.data_dir, "clusters.csv"))[
+            "cluster_id"
+        ].to_numpy()
         gt_ids = torch.LongTensor(gt_ids)
 
     tested_models = ["k_shape", "k_means_softdtw"]
@@ -67,13 +75,15 @@ if __name__ == "__main__":
             if modelname == "k_shape":
                 model = KShape(n_clusters=args.num_clusters, max_iter=5)
             elif modelname == "k_means_softdtw":
-                model = TimeSeriesKMeans(n_clusters=args.num_clusters, metric="softdtw", max_iter=5)
+                model = TimeSeriesKMeans(
+                    n_clusters=args.num_clusters, metric="softdtw", max_iter=5
+                )
 
             labels = model.fit_predict(Ts_reshaped)
             labels_file = Path(args.exp_path, "exp_" + str(run), "compare_clusters.csv")
             if labels_file.exists():
                 df = pd.read_csv(labels_file)
-                df[modelname+"_clusters"] = labels
+                df[modelname + "_clusters"] = labels
                 df.to_csv(labels_file)
             labels = torch.LongTensor(labels)
             time_overall = time.time() - time_start

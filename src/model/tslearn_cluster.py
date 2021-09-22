@@ -4,9 +4,10 @@ import hydra
 import numpy as np
 import torch
 from omegaconf import DictConfig
-from pytorch_lightning import Callback, Trainer, LightningDataModule, LightningModule
+from pytorch_lightning import Callback, LightningDataModule
 from pytorch_lightning.loggers import LightningLoggerBase
 from test_tube import Experiment
+from tslearn.clustering import TimeSeriesKMeans, KShape
 
 from src.utils import get_logger
 from src.utils.metrics import consistency, purity
@@ -14,12 +15,11 @@ from src.utils.metrics import consistency, purity
 log = get_logger(__name__)
 
 
-def cae_train(config: DictConfig):
+def tslearn_infer(config: DictConfig):
     """
-    Training module for convolutional autoencoder clustering for event sequences
-    every event first passes through pure cohortney module
-    then - to encoder, and finally clustered using KMeans over conv1d representations
+    Employing tslearn standard method to infer cluster labels
     """
+
     np.set_printoptions(threshold=10000)
     torch.set_printoptions(threshold=10000)
 
@@ -41,42 +41,37 @@ def cae_train(config: DictConfig):
                 log.info(f"Instantiating logger <{lg_conf._target_}>")
                 logger.append(hydra.utils.instantiate(lg_conf))
 
-    trainer: Trainer = hydra.utils.instantiate(
-        config.trainer, callbacks=None, logger=None, _convert_="partial"
-    )
-
     # Init and prepare lightning datamodule
     log.info(f"Instantiating datamodule <{config.datamodule._target_}>")
-    cohortney_dm: LightningDataModule = hydra.utils.instantiate(config.datamodule)
-    cohortney_dm.prepare_data()
-    cohortney_dm.setup(stage="fit")
-
-    # Init lightning model
-    log.info(f"Instantiating model <{config.model._target_}>")
-    print(config.model)
-    config.model.in_channels = cohortney_dm.train_data.shape[1]
-    config.model.num_clusters = config.num_clusters
-    model: LightningModule = hydra.utils.instantiate(config.model)
-
-    # Train the model
-    log.info("Starting training!")
-    trainer.fit(model, cohortney_dm)
+    tslearn_dm: LightningDataModule = hydra.utils.instantiate(config.datamodule)
+    tslearn_dm.prepare_data()
+    tslearn_dm.setup(stage="test")
 
     # inference
-    embeddings = model.predict_step(cohortney_dm.train_data)
+    if config.aux_module.modelname == "k_shape":
+        cluster_model = KShape(
+            n_clusters=config.num_clusters, max_iter=config.aux_module.max_iter
+        )
+    elif config.aux_module.modelname == "k_means_softdtw":
+        cluster_model = TimeSeriesKMeans(
+            n_clusters=config.num_clusters,
+            metric=config.aux_module.kmeans.metric,
+            max_iter=config.aux_module.max_iter,
+        )
 
     assigned_labels = []
-    pred_y = model.clusterize(embeddings)
+    pred_y = cluster_model.fit_predict(tslearn_dm.test_data)
     if config.aux_module.verbose:
         print(
             f'Sizes of clusters: {", ".join([str((torch.tensor(pred_y) == i).sum().item()) for i in range(config.num_clusters)])}\n'
         )
     print("preds:", pred_y)
+    pred_y = torch.LongTensor(pred_y)
     # torch stacking of predicted labels
     # assigned_labels = torch.LongTensor(assigned_labels)
     assigned_labels.append(pred_y)
 
-    gt_ids = cohortney_dm.gt_ids
+    gt_ids = tslearn_dm.gt_ids
     if gt_ids is not None:
         print("reals:", gt_ids)
         pur = purity(pred_y, gt_ids)

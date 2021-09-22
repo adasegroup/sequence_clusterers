@@ -1,21 +1,22 @@
-import torch
-from torch import nn
-from torch.utils.data import DataLoader
-from torch.optim import SGD, Adam
-import numpy as np
-import time
-from sklearn.metrics.cluster import normalized_mutual_info_score
-from pathlib import Path
-import pandas as pd
 import json
-from test_tube import Experiment
+import time
+from pathlib import Path
 
+import numpy as np
+import pandas as pd
+import torch
+from sklearn.metrics.cluster import normalized_mutual_info_score
+from test_tube import Experiment
+from torch import nn
+from torch.optim import SGD, Adam
+from torch.utils.data import DataLoader
+
+from src.networks.clustering import Kmeans, arrange_clustering, cluster_assign
 from src.networks.seq_cnn import SeqCNN
-from src.networks.clustering import arrange_clustering, cluster_assign, Kmeans
-from src.utils.datamodule import load_data
-from src.utils.metrics import purity, consistency
 from src.utils import make_grid
-from src.utils.cohortney_utils import arr_func, multiclass_fws_array, events_tensor
+from src.utils.cohortney_utils import arr_func, events_tensor, multiclass_fws_array
+from src.utils.datamodule import load_data
+from src.utils.metrics import consistency, purity
 
 
 def deep_cluster_train(config):
@@ -28,14 +29,26 @@ def deep_cluster_train(config):
     Such simple training method allows you to achieve good quality for clustering the initial events.
     """
     args = config.aux_module
-    exp_deep_cluster = Experiment(config.logger.test_tube.save_dir, config.logger.test_tube.name + '_deep_cluster' +'/'+ config.data_dir.split('/')[-1])
-    exp_deep_cluster.tag({'deep_cluster': True})
+    exp_deep_cluster = Experiment(
+        config.logger.test_tube.save_dir,
+        config.logger.test_tube.name
+        + "_deep_cluster"
+        + "/"
+        + config.data_dir.split("/")[-1],
+    )
+    exp_deep_cluster.tag({"deep_cluster": True})
     np.set_printoptions(threshold=10000)
     torch.set_printoptions(threshold=10000)
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    ss, _, class2idx, user_list = load_data(Path(config.data_dir), maxsize=args.maxsize, maxlen=args.maxlen,
-                                            ext=args.ext, datetime=args.datetime, type_=args.type)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    ss, _, class2idx, user_list = load_data(
+        Path(config.data_dir),
+        maxsize=args.maxsize,
+        maxlen=args.maxlen,
+        ext=args.ext,
+        datetime=args.datetime,
+        type_=args.type,
+    )
 
     grid = make_grid(args.gamma, args.Tb, args.Th, args.N, args.n)
     T_j = grid[-1]
@@ -48,13 +61,13 @@ def deep_cluster_train(config):
     dataset = torch.FloatTensor(mc_batch)
 
     if args.verbose:
-        print('Loaded data')
-        print(f'Dataset shape: {list(dataset.shape)}')
+        print("Loaded data")
+        print(f"Dataset shape: {list(dataset.shape)}")
     input_size = dataset.shape[-1]
 
     assigned_labels = []
     for run_id in range(args.nruns):
-        print(f'============= RUN {run_id + 1} ===============')
+        print(f"============= RUN {run_id + 1} ===============")
         in_channels = len(class2idx)
         model = SeqCNN(input_size, in_channels, device=device)
         model.top_layer = None
@@ -67,11 +80,13 @@ def deep_cluster_train(config):
             weight_decay=args.wd,
         )
         criterion = nn.CrossEntropyLoss()
-        dataloader = DataLoader(dataset,
-                                shuffle=False,
-                                batch_size=config.experiment.batch_size,
-                                num_workers=config.experiment.num_workers,
-                                pin_memory=True)
+        dataloader = DataLoader(
+            dataset,
+            shuffle=False,
+            batch_size=config.experiment.batch_size,
+            num_workers=config.experiment.num_workers,
+            pin_memory=True,
+        )
 
         deepcluster = Kmeans(args.nmb_cluster)
         cluster_log = []
@@ -81,26 +96,34 @@ def deep_cluster_train(config):
             model.top_layer = None
 
             # get the features for the whole dataset
-            features = compute_features(dataloader, model, len(dataset), config.experiment.batch_size, device=device)
+            features = compute_features(
+                dataloader,
+                model,
+                len(dataset),
+                config.experiment.batch_size,
+                device=device,
+            )
 
             # cluster the features
             if args.verbose:
-                print('Cluster the features')
+                print("Cluster the features")
             clustering_loss, I = deepcluster.cluster(features, verbose=args.verbose)
 
-            if Path(config.data_dir, 'clusters.csv').exists():
-                gt_labels = pd.read_csv(Path(args.data_dir, 'clusters.csv'))['cluster_id'].to_numpy()
+            if Path(config.data_dir, "clusters.csv").exists():
+                gt_labels = pd.read_csv(Path(args.data_dir, "clusters.csv"))[
+                    "cluster_id"
+                ].to_numpy()
                 gt_labels = torch.LongTensor(gt_labels)
 
                 pur = purity(torch.LongTensor(I), gt_labels)
-                exp_deep_cluster.log({'purity': pur})
+                exp_deep_cluster.log({"purity": pur})
 
                 if args.verbose:
-                    print(f'Purity: {pur:.4f}')
+                    print(f"Purity: {pur:.4f}")
 
             # assign pseudo-labels
             if args.verbose:
-                print('Assign pseudo labels')
+                print("Assign pseudo labels")
             train_dataset = cluster_assign(deepcluster.lists, dataset)
 
             train_dataloader = torch.utils.data.DataLoader(
@@ -124,48 +147,52 @@ def deep_cluster_train(config):
             # print log
             if args.verbose:
                 print(
-                    f'###### Epoch {epoch} ###### \n Time: {(time.time() - end):.3f} s\n Clustering loss: {clustering_loss:.3f} \n ConvNet loss: {loss:.3f}')
+                    f"###### Epoch {epoch} ###### \n Time: {(time.time() - end):.3f} s\n Clustering loss: {clustering_loss:.3f} \n ConvNet loss: {loss:.3f}"
+                )
                 try:
                     nmi = normalized_mutual_info_score(
                         arrange_clustering(deepcluster.lists),
-                        arrange_clustering(cluster_log[-1])
+                        arrange_clustering(cluster_log[-1]),
                     )
-                    print(f'NMI against previous assignment: {nmi:.3f}')
+                    print(f"NMI against previous assignment: {nmi:.3f}")
                 except IndexError:
                     pass
-                print('####################### \n')
+                print("####################### \n")
             cluster_log.append(deepcluster.lists)
 
         assigned_labels.append(I)
         if args.verbose:
             print(
-                f'Sizes of clusters: {", ".join([str((torch.tensor(I) == i).sum().item()) for i in range(args.nmb_cluster)])}\n')
+                f'Sizes of clusters: {", ".join([str((torch.tensor(I) == i).sum().item()) for i in range(args.nmb_cluster)])}\n'
+            )
 
     assigned_labels = torch.LongTensor(assigned_labels)
     cons = consistency(assigned_labels)
 
     print(assigned_labels)
     if args.verbose:
-        print(f'Consistncy: {cons}\n')
+        print(f"Consistency: {cons}\n")
 
-    results = {'consistency': cons}
+    results = {"consistency": cons}
 
-    if Path(args.data_dir, 'clusters.csv').exists():
-        gt_labels = pd.read_csv(Path(args.data_dir, 'clusters.csv'))['cluster_id'].to_numpy()
+    if Path(args.data_dir, "clusters.csv").exists():
+        gt_labels = pd.read_csv(Path(args.data_dir, "clusters.csv"))[
+            "cluster_id"
+        ].to_numpy()
         gt_labels = torch.LongTensor(gt_labels)
 
         pur_val_mean = np.mean([purity(x, gt_labels) for x in assigned_labels])
         pur_val_std = np.std([purity(x, gt_labels) for x in assigned_labels])
 
-        print(f'\nPurity: {pur_val_mean}+-{pur_val_std}')
+        print(f"\nPurity: {pur_val_mean}+-{pur_val_std}")
 
-        results['purity'] = (pur_val_mean, pur_val_std)
+        results["purity"] = (pur_val_mean, pur_val_std)
 
     exp_deep_cluster.save()
     exp_deep_cluster.close()
 
     if args.result_path is not None:
-        json.dump(results, Path(f'{args.result_path}.json'))
+        json.dump(results, Path(f"{args.result_path}.json"))
 
 
 def train(loader, model, crit, opt, device, args=None):
@@ -222,13 +249,13 @@ def compute_features(dataloader, model, N, batch_size, device):
         aux = model(input_var).data.cpu().numpy()
 
         if i == 0:
-            features = np.zeros((N, aux.shape[1]), dtype='float32')
+            features = np.zeros((N, aux.shape[1]), dtype="float32")
 
-        aux = aux.astype('float32')
+        aux = aux.astype("float32")
         if i < len(dataloader) - 1:
-            features[i * batch_size: (i + 1) * batch_size] = aux
+            features[i * batch_size : (i + 1) * batch_size] = aux
         else:
             # special treatment for final batch
-            features[i * batch_size:] = aux
+            features[i * batch_size :] = aux
 
     return features

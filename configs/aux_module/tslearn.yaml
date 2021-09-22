@@ -1,0 +1,8 @@
+device: "cpu"
+verbose: True
+nruns: 3
+result_path: null
+modelname: "k_means_softdtw"
+max_iter: 5
+kmeans:
+  metric: "softdtw"

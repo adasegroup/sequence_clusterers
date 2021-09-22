@@ -2,9 +2,9 @@
 seed: 42
 exp_name: default
 defaults:
-    - datamodule: default.yaml
+    - datamodule: tslearn_datamodule.yaml #cohortney_datamodule.yaml
     - trainer: default.yaml
-    - model: default.yaml
+    - model: conv1d_autoencoder.yaml
     - callbacks: default.yaml  # set this to null if you don't want to use callbacks
     - experiment: default.yaml
     - logger: default.yaml  # set logger here or use command line (e.g. `python run.py logger=wandb`)
@@ -12,6 +12,8 @@ defaults:
 
 work_dir: ${hydra:runtime.cwd}
 data_dir: ${work_dir}/data/K2_C5
+num_clusters: 2
+num_events: 5
 debug: False
 
 # disable python warnings if they annoy you
