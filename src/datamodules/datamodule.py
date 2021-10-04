@@ -4,20 +4,42 @@ from typing import Dict, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 import torch
+import json
 from pytorch_lightning import LightningDataModule
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, Dataset
 
 from src.utils import make_grid
 from src.utils.cohortney_utils import arr_func, events_tensor, multiclass_fws_array
 from src.utils.data_utils import download_dataset, load_data, load_data_kshape
 
 
+class CohortneyDataset(Dataset):
+    def __init__(self, data, target, maxsize: Optional[int] = None):
+        super(CohortneyDataset, self).__init__()
+        if maxsize is None:
+            self.data = data
+            self.target = target
+        else:
+            self.data = data[:maxsize]
+            self.target = target[:maxsize]
+
+    def __getitem__(self, idx):
+        d = self.data[idx]
+        t = self.target[idx]
+        return d, t
+
+    def __len__(self):
+        return len(self.data)
+
+
 class CohortneyDataModule(LightningDataModule):
     def __init__(
         self,
         data_dir: Union[str, Path] = "./",
+        data_url_json: Union[str, Path] = "./",
         maxsize: Optional[int] = None,
         maxlen: int = -1,
+        train_val_split: float = 0.8,
         ext: str = "csv",
         time_col: str = "time",
         event_col: str = "event",
@@ -33,8 +55,10 @@ class CohortneyDataModule(LightningDataModule):
     ):
         super().__init__()
         self.data_dir = data_dir
+        self.data_url_json = data_url_json
         self.maxsize = maxsize
         self.maxlen = maxlen
+        self.train_val_split = train_val_split
         self.ext = ext
         self.time_col = time_col
         self.event_col = event_col
@@ -47,20 +71,24 @@ class CohortneyDataModule(LightningDataModule):
         self.N = N
         self.n = n
         self.type_ = type_
-        self.gt_ids = None
-        # self.dims =
 
     def prepare_data(self):
-        # download
+        """
+        Script to download data if necessary
+        """
         data_name = self.data_dir.split("/")[-1]
-        download_dataset(self.data_dir, data_name)
+        # dictionary with urls to download sequence data
+        with open(self.data_url_json, "r") as url_data:
+            datasets_urls = json.load(url_data)
+        download_dataset(self.data_dir, datasets_urls[data_name])
 
     def setup(self, stage: Optional[str] = None):
+        """
+        Transforming dataset for conv1d_encoder
+        """
         print("Transforming data")
-        # transforming
         ss, Ts, class2idx, user_list, gt_ids = load_data(
             self.data_dir,
-            maxsize=self.maxsize,
             maxlen=self.maxlen,
             ext=self.ext,
             time_col=self.time_col,
@@ -68,7 +96,6 @@ class CohortneyDataModule(LightningDataModule):
             datetime=self.datetime,
             type_=self.type_,
         )
-        self.gt_ids = gt_ids
         # grid generation
         grid = make_grid(self.gamma, self.Tb, self.Th, self.N, self.n)
         T_j = grid[-1]
@@ -78,20 +105,26 @@ class CohortneyDataModule(LightningDataModule):
 
         _, events_fws_mc = arr_func(user_list, T_j, delta_T, multiclass_fws_array)
         mc_batch = events_tensor(events_fws_mc)
+        self.dataset = CohortneyDataset(mc_batch, gt_ids, self.maxsize)
 
         # Assign train/val datasets for use in dataloaders
         if stage == "fit" or stage is None:
 
-            self.train_data = mc_batch
-            self.val_data = mc_batch
+            permutation = np.random.permutation(len(self.dataset))
+            split = int(self.train_val_split * len(self.dataset))
+            self.train_data = CohortneyDataset(
+                self.dataset.data[permutation[:split]],
+                self.dataset.target[permutation[:split]],
+            )
+            # self.val_data = self.dataset[permutation[split : len(self.dataset)]]
+            self.val_data = CohortneyDataset(
+                self.dataset.data[permutation[split : len(self.dataset)]],
+                self.dataset.target[permutation[split : len(self.dataset)]],
+            )
 
-            # len_train = int(0.8*len(mc_batch))
-            # len_val = len(mc_batch) - len_train
-            # self.train_data, self.val_data = random_split(mc_batch, [len_train, len_val])
-
-        # Assign test dataset for use in dataloader(s)
-        if stage == "test" or stage is None:
-            self.test_data = mc_batch
+        # Assign test dataset for use in dataloader
+        if stage == "test":
+            self.test_data = self.dataset
 
     def train_dataloader(self):
         return DataLoader(
@@ -133,8 +166,6 @@ class TslearnDataModule(LightningDataModule):
         self.event_col = event_col
         self.batch_size = batch_size
         self.num_workers = num_workers
-        self.gt_ids = None
-        # self.dims =
 
     def prepare_data(self):
         # download
@@ -153,22 +184,25 @@ class TslearnDataModule(LightningDataModule):
             self.maxlen,
         )
         if Path(self.data_dir, "clusters.csv").exists():
-            self.gt_ids = pd.read_csv(Path(self.data_dir, "clusters.csv"))[
+            gt_ids = pd.read_csv(Path(self.data_dir, "clusters.csv"))[
                 "cluster_id"
             ].to_numpy()
-            self.gt_ids = torch.LongTensor(self.gt_ids)
+            gt_ids = torch.LongTensor(gt_ids)
+        else:
+            gt_ids = [0] * len(ts_reshaped)
+            gt_ids = torch.LongTensor(ts_reshaped)
+        self.dataset = CohortneyDataset(ts_reshaped, gt_ids)
         if self.maxsize is not None:
-            self.gt_ids = self.gt_ids[: self.maxsize]
-            ts_reshaped = ts_reshaped[: self.maxsize]
+            self.dataset = self.dataset[: self.maxsize]
         # Assign train/val datasets for use in dataloaders
         if stage == "fit" or stage is None:
 
-            self.train_data = ts_reshaped
-            self.val_data = ts_reshaped
+            self.train_data = self.dataset
+            self.val_data = self.dataset
 
         # Assign test dataset for use in dataloader(s)
         if stage == "test" or stage is None:
-            self.test_data = ts_reshaped
+            self.test_data = self.dataset
 
     def train_dataloader(self):
         return DataLoader(

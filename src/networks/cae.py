@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from sklearn.cluster import KMeans
+from src.utils import purity
 
 
 class Conv1dAutoEncoder(pl.LightningModule):
@@ -56,32 +57,56 @@ class Conv1dAutoEncoder(pl.LightningModule):
 
         self.train_index = 0
         self.val_index = 0
+        self.train_metric = purity
+        self.val_metric = purity
+        self.test_metric = purity
 
     def forward(self, x):
         latent = self.encoder(x)
         return self.decoder(latent)
 
     def training_step(self, batch, batch_idx):
-        x = batch
-        x_hat = self(x)
-
-        loss = torch.nn.MSELoss()(x_hat, x)
-        self.log("train_loss", loss)
-        return loss
+        x, gts = batch
+        loss = torch.nn.MSELoss()(self(x), x)
+        embedds = self.predict_step(x)
+        preds = self.clusterize(embedds)
+        pur = self.train_metric(preds, gts)
+        self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("train_pur", pur, on_step=False, on_epoch=True, prog_bar=True)
+        return {"loss": loss, "preds": preds}
 
     def training_epoch_end(self, outputs):
-        losses = torch.as_tensor([o["loss"] for o in outputs])
-        self.log("avg_train_loss", losses.mean(), prog_bar=True)
+        # losses = torch.as_tensor([o["loss"] for o in outputs])
+        # self.log("avg_train_loss", losses.mean(), prog_bar=True)
+        pass
 
     def validation_step(self, batch, batch_idx):
-        x = batch
-        x_hat = self(x)
+        x, gts = batch
+        loss = torch.nn.MSELoss()(self(x), x)
+        embedds = self.predict_step(x)
+        preds = self.clusterize(embedds)
+        pur = self.train_metric(preds, gts)
+        self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val_pur", pur, on_step=False, on_epoch=True, prog_bar=True)
+        return {"loss": loss, "preds": preds}
 
-        loss = torch.nn.MSELoss()(x_hat, x)
-        output = {"val_loss": loss}
-        self.log_dict(output, prog_bar=True)
+    def validation_epoch_end(self, outputs):
+        # losses = []
+        # for o in outputs:
+        #     losses.append(o["val_loss"])
 
-        return output
+        # self.log_dict({"avg_val_loss": torch.as_tensor(losses).mean()}, prog_bar=True)
+        pass
+
+    def test_step(self, batch, batch_idx: int):
+        x, gts = batch
+        loss = torch.nn.MSELoss()(self(x), x)
+        embedds = self.predict_step(x)
+        preds = self.clusterize(embedds)
+        pur = self.train_metric(preds, gts)
+        self.log("test_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("test_pur", pur, on_step=False, on_epoch=True, prog_bar=True)
+        return {"loss": loss, "preds": preds}
 
     def predict_step(self, batch):
         """
@@ -108,16 +133,9 @@ class Conv1dAutoEncoder(pl.LightningModule):
             pred_y = kmeans.fit_predict(embeddings)
             pred_y = torch.LongTensor(pred_y)
         else:
-            raise Exception(f"Warning {self.clustering} is not supported")
+            raise Exception(f"Clusterization: {self.clustering} is not supported")
 
         return pred_y
-
-    def validation_epoch_end(self, outputs):
-        losses = []
-        for o in outputs:
-            losses.append(o["val_loss"])
-
-        self.log_dict({"avg_val_loss": torch.as_tensor(losses).mean()}, prog_bar=True)
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=0.003)

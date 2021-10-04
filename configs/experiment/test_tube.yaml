@@ -1,0 +1,6 @@
+exp_name: ${aux_module}
+debug: False
+save_dir: ${save_dir}
+batch_size: 64
+num_workers: 0
+pin_memory: False

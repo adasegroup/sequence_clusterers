@@ -1,0 +1,3 @@
+cohortney_logger:
+  _target_: src.loggers.cohortney_logger.CohortneyCsvLogger
+  save_dir: ${save_dir}

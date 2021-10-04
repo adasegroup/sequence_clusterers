@@ -1,8 +1,10 @@
 _target_: src.datamodules.datamodule.CohortneyDataModule
 
 data_dir: ${data_dir} # data_dir is specified in config.yaml
-maxsize: null
+data_url_json: ${data_url_file}
+maxsize: 600
 maxlen: -1
+train_val_split: 0.8
 ext: "csv"
 time_col: "time"
 event_col: "event"

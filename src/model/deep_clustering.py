@@ -15,7 +15,7 @@ from src.networks.clustering import Kmeans, arrange_clustering, cluster_assign
 from src.networks.seq_cnn import SeqCNN
 from src.utils import make_grid
 from src.utils.cohortney_utils import arr_func, events_tensor, multiclass_fws_array
-from src.utils.datamodule import load_data
+from src.utils.data_utils import load_data
 from src.utils.metrics import consistency, purity
 
 

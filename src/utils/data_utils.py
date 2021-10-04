@@ -13,15 +13,7 @@ from typing import Union, List, Optional, Tuple, Dict
 from tslearn.utils import to_time_series_dataset
 
 
-DATASET_URLS = {
-    "sin_K2_C5": "https://www.dropbox.com/s/hn37oyidt9joj2p/sin_K2_C5.zip",
-    "Linkedin": "https://www.dropbox.com/s/kliukm2j4mp5b94/Linkedin.zip",
-    "K5_C5": "https://www.dropbox.com/s/0r4w3umderk1ccn/K5_C5.zip",
-    "K2_C5": "https://www.dropbox.com/s/ertguufarzvwp3l/K2_C5.zip",
-}
-
-
-def download_dataset(data_dir: Union[str, Path], data_name: str):
+def download_dataset(data_dir: Union[str, Path], data_url: str):
     """
     Download dataset if it is available at predefined URL
     """
@@ -29,7 +21,7 @@ def download_dataset(data_dir: Union[str, Path], data_name: str):
         print("Data is already in place")
         return
     else:
-        download_unpack_zip(DATASET_URLS[data_name], data_dir)
+        download_unpack_zip(data_url, data_dir)
 
 
 def download_unpack_zip(zipurl: str, data_dir):
@@ -58,7 +50,6 @@ def download_unpack_zip(zipurl: str, data_dir):
 
 def load_data(
     data_dir: Union[str, Path],
-    maxsize: Optional[int] = None,
     maxlen: int = -1,
     ext: str = "txt",
     time_col: str = "time",
@@ -105,10 +96,6 @@ def load_data(
         else 0,
     ):
         if file.endswith(f".{ext}") and re.sub(fr".{ext}", "", file).isnumeric():
-            if maxsize is None or nb_files <= maxsize:
-                nb_files += 1
-            else:
-                break
 
             df = pd.read_csv(Path(data_dir, file))
             classes = classes.union(set(df[event_col].unique()))
