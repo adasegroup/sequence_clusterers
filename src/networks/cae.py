@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from sklearn.cluster import KMeans
+
 from src.utils import purity
 
 
@@ -60,6 +61,7 @@ class Conv1dAutoEncoder(pl.LightningModule):
         self.train_metric = purity
         self.val_metric = purity
         self.test_metric = purity
+        self.final_labels = None
 
     def forward(self, x):
         latent = self.encoder(x)
@@ -108,12 +110,23 @@ class Conv1dAutoEncoder(pl.LightningModule):
         self.log("test_pur", pur, on_step=False, on_epoch=True, prog_bar=True)
         return {"loss": loss, "preds": preds}
 
+    def test_epoch_end(self, outputs):
+        """
+        Outputs is list of dicts returned from training_step()
+        """
+        labels = outputs[0]["preds"]
+        for i in range(1, len(outputs)):
+            labels = torch.cat([labels, outputs[i]["preds"]], dim=0)
+        self.final_labels = labels
+        return labels
+
     def predict_step(self, batch):
         """
         Returns embeddings
         """
         ans = self.encoder(batch)
-        ans = ans.cpu().squeeze().detach().numpy()
+        # ans = ans.cpu().squeeze().detach().numpy()
+        ans = ans.squeeze()
         ans = ans.reshape(ans.shape[0], ans.shape[1] * ans.shape[2])
 
         return ans
@@ -130,8 +143,13 @@ class Conv1dAutoEncoder(pl.LightningModule):
                 n_init=10,
                 random_state=0,
             )
-            pred_y = kmeans.fit_predict(embeddings)
-            pred_y = torch.LongTensor(pred_y)
+            if embeddings.is_cuda:
+                pred_y = kmeans.fit_predict(embeddings.cpu().detach().numpy())
+                pred_y = torch.LongTensor(pred_y)
+                pred_y = pred_y.cuda()
+            else:
+                pred_y = kmeans.fit_predict(embeddings)
+                pred_y = torch.LongTensor(pred_y)
         else:
             raise Exception(f"Clusterization: {self.clustering} is not supported")
 

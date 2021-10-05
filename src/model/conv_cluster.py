@@ -1,18 +1,18 @@
+# from test_tube import Experiment
+from pathlib import Path
 from typing import List
 
 import hydra
 import numpy as np
+import pandas as pd
 import torch
 from omegaconf import DictConfig
-from pytorch_lightning import Callback, Trainer, LightningDataModule, LightningModule
+from pytorch_lightning import (Callback, LightningDataModule, LightningModule,
+                               Trainer)
 from pytorch_lightning.loggers import LightningLoggerBase
 
-# from test_tube import Experiment
-from pathlib import Path
-
 from src.utils import get_logger
-
-# from src.utils.metrics import consistency, purity
+from src.utils.metrics import purity
 
 log = get_logger(__name__)
 
@@ -27,17 +27,20 @@ def cae_train(config: DictConfig):
     torch.set_printoptions(threshold=10000)
     default_save_dir = config.save_dir
 
-    callbacks: List[Callback] = []
-    if "callbacks" in config:
-        for _, cb_conf in config["callbacks"].items():
-            if "_target_" in cb_conf:
-                callbacks.append(hydra.utils.instantiate(cb_conf))
 
     for i in range(config.n_runs):
 
         config.save_dir = str(Path(default_save_dir, "exp_" + str(i)))
         Path(config.save_dir).mkdir(parents=True, exist_ok=True)
         log.info(f"Run: {i+1}")
+        # Init callbacks
+        callbacks: List[Callback] = []
+        if "callbacks" in config:
+            for _, cb_conf in config["callbacks"].items():
+                if "dirpath" in cb_conf:
+                    cb_conf.dirpath = config.save_dir
+                if "_target_" in cb_conf:
+                    callbacks.append(hydra.utils.instantiate(cb_conf))
 
         # Init Lightning loggers
         logger: List[LightningLoggerBase] = []
@@ -70,35 +73,14 @@ def cae_train(config: DictConfig):
         log.info("Starting training!")
         trainer.fit(model, cohortney_dm)
 
-        # inference
-        # embeddings = model.predict_step(cohortney_dm.train_data)
-
-        # assigned_labels = []
-        # pred_y = model.clusterize(embeddings)
-        # if config.aux_module.verbose:
-        #    print(
-        #        f'Sizes of clusters: {", ".join([str((torch.tensor(pred_y) == i).sum().item()) for i in range(config.num_clusters)])}\n'
-        #    )
-        # print("preds:", pred_y)
-        # torch stacking of predicted labels
-        # assigned_labels = torch.LongTensor(assigned_labels)
-        # assigned_labels.append(pred_y)
-
-        # gt_ids = cohortney_dm.gt_ids
-        # if gt_ids is not None:
-        #     print("reals:", gt_ids)
-        #     pur = purity(pred_y, gt_ids)
-        #     # exp_cae.log({"purity": pur})
-        #     print(f"\nPurity: {pur:.4f}")
-
-        # cons = consistency(assigned_labels)
-
-        # print(f"\nConsistency: {cons:.4f}")
-        # results = {}
-        # results["consistency"] = cons
-
-        # if gt_ids is not None:
-        #     pur_val_mean = np.mean([purity(x, gt_ids) for x in assigned_labels])
-        #     pur_val_std = np.std([purity(x, gt_ids) for x in assigned_labels])
-        #     print(f"Purity: {pur_val_mean}+-{pur_val_std}")
-        #     results["purity"] = (pur_val_mean, pur_val_std)
+        # Inference - to be restructed into the model
+        log.info("Starting predicting labels")
+        cohortney_dm.setup(stage="test")
+        trainer.test(model, cohortney_dm)
+        pred_labels = model.final_labels
+        gt_labels = cohortney_dm.test_data.target
+        # saving predicted and actual labels - for graphs and tables
+        df = pd.DataFrame(columns=["cluster_id", "cluster_cohortney"])
+        df["cluster_id"] = gt_labels.tolist()
+        df["cluster_cohortney"] = pred_labels.tolist()
+        df.to_csv(Path(config.save_dir, "inferredclusters.csv"))
