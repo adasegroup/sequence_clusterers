@@ -13,11 +13,11 @@ defaults:
 n_runs: 10
 num_epochs: 50
 work_dir: ${hydra:runtime.cwd}
-data_name: Linkedin
+data_name: exp_K2_C5
 data_dir: ${work_dir}/data/${data_name}
 save_dir: ${work_dir}/experiments/${data_name}
-num_clusters: 9
-num_events: 82
+num_clusters: 2
+num_events: 5
 # path to dictionary with urls to download datasets
 data_url_file: ${work_dir}/src/datamodules/datasets_urls.json
 

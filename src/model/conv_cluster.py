@@ -74,7 +74,7 @@ def cae_train(config: DictConfig):
         # Inference - to be restructed into the model
         log.info("Starting predicting labels")
         cohortney_dm.setup(stage="test")
-        trainer.test(cohortney_dm)
+        trainer.test(model, cohortney_dm)
         pred_labels = model.final_labels
         gt_labels = cohortney_dm.test_data.target
         # saving predicted and actual labels - for graphs and tables

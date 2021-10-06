@@ -72,60 +72,61 @@ class Conv1dAutoEncoder(pl.LightningModule):
         loss = torch.nn.MSELoss()(self(x), x)
         embedds = self.predict_step(x)
         preds = self.clusterize(embedds)
-        pur = self.train_metric(gts, preds)
         self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train_pur", pur, on_step=False, on_epoch=True, prog_bar=True)
-        return {"loss": loss, "preds": preds}
+        return {"loss": loss, "preds": preds, "gts": gts}
 
     def training_epoch_end(self, outputs):
-        # losses = torch.as_tensor([o["loss"] for o in outputs])
-        # self.log("avg_train_loss", losses.mean(), prog_bar=True)
-        pass
+        labels = outputs[0]["preds"]
+        gt_labels = outputs[0]["gts"]
+        for i in range(1, len(outputs)):
+            labels = torch.cat([labels, outputs[i]["preds"]], dim=0)
+            gt_labels = torch.cat([gt_labels, outputs[i]["gts"]], dim=0)
+        pur = self.train_metric(gt_labels, labels)
+        self.log("train_pur", pur, prog_bar=True)
 
     def validation_step(self, batch, batch_idx):
         x, gts = batch
         loss = torch.nn.MSELoss()(self(x), x)
         embedds = self.predict_step(x)
         preds = self.clusterize(embedds)
-        pur = self.train_metric(gts, preds)
         self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("val_pur", pur, on_step=False, on_epoch=True, prog_bar=True)
-        return {"loss": loss, "preds": preds}
+        return {"loss": loss, "preds": preds, "gts": gts}
 
     def validation_epoch_end(self, outputs):
-        # losses = []
-        # for o in outputs:
-        #     losses.append(o["val_loss"])
-
-        # self.log_dict({"avg_val_loss": torch.as_tensor(losses).mean()}, prog_bar=True)
-        pass
+        labels = outputs[0]["preds"]
+        gt_labels = outputs[0]["gts"]
+        for i in range(1, len(outputs)):
+            labels = torch.cat([labels, outputs[i]["preds"]], dim=0)
+            gt_labels = torch.cat([gt_labels, outputs[i]["gts"]], dim=0)
+        pur = self.val_metric(gt_labels, labels)
+        self.log("val_pur", pur, prog_bar=True)
 
     def test_step(self, batch, batch_idx: int):
         x, gts = batch
         loss = torch.nn.MSELoss()(self(x), x)
         embedds = self.predict_step(x)
         preds = self.clusterize(embedds)
-        pur = self.train_metric(gts, preds)
         self.log("test_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("test_pur", pur, on_step=False, on_epoch=True, prog_bar=True)
-        return {"loss": loss, "preds": preds}
+        return {"loss": loss, "preds": preds, "gts": gts}
 
     def test_epoch_end(self, outputs):
         """
         Outputs is list of dicts returned from training_step()
         """
         labels = outputs[0]["preds"]
+        gt_labels = outputs[0]["gts"]
         for i in range(1, len(outputs)):
             labels = torch.cat([labels, outputs[i]["preds"]], dim=0)
+            gt_labels = torch.cat([gt_labels, outputs[i]["gts"]], dim=0)
+        pur = self.test_metric(gt_labels, labels)
         self.final_labels = labels
-        return labels
+        self.log("test_pur", pur, prog_bar=True)
 
     def predict_step(self, batch):
         """
         Returns embeddings
         """
         ans = self.encoder(batch)
-        # ans = ans.cpu().squeeze().detach().numpy()
         ans = ans.squeeze()
         ans = ans.reshape(ans.shape[0], ans.shape[1] * ans.shape[2])
 
@@ -143,6 +144,8 @@ class Conv1dAutoEncoder(pl.LightningModule):
                 n_init=10,
                 random_state=0,
             )
+            # to be refactored
+            # or to be used with torch-kmeans
             if embeddings.is_cuda:
                 pred_y = kmeans.fit_predict(embeddings.cpu().detach().numpy())
                 pred_y = torch.LongTensor(pred_y)
