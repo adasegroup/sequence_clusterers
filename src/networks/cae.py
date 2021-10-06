@@ -72,7 +72,7 @@ class Conv1dAutoEncoder(pl.LightningModule):
         loss = torch.nn.MSELoss()(self(x), x)
         embedds = self.predict_step(x)
         preds = self.clusterize(embedds)
-        pur = self.train_metric(preds, gts)
+        pur = self.train_metric(gts, preds)
         self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("train_pur", pur, on_step=False, on_epoch=True, prog_bar=True)
         return {"loss": loss, "preds": preds}
@@ -87,7 +87,7 @@ class Conv1dAutoEncoder(pl.LightningModule):
         loss = torch.nn.MSELoss()(self(x), x)
         embedds = self.predict_step(x)
         preds = self.clusterize(embedds)
-        pur = self.train_metric(preds, gts)
+        pur = self.train_metric(gts, preds)
         self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("val_pur", pur, on_step=False, on_epoch=True, prog_bar=True)
         return {"loss": loss, "preds": preds}
@@ -105,7 +105,7 @@ class Conv1dAutoEncoder(pl.LightningModule):
         loss = torch.nn.MSELoss()(self(x), x)
         embedds = self.predict_step(x)
         preds = self.clusterize(embedds)
-        pur = self.train_metric(preds, gts)
+        pur = self.train_metric(gts, preds)
         self.log("test_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         self.log("test_pur", pur, on_step=False, on_epoch=True, prog_bar=True)
         return {"loss": loss, "preds": preds}

@@ -7,8 +7,7 @@ import numpy as np
 import pandas as pd
 import torch
 from omegaconf import DictConfig
-from pytorch_lightning import (Callback, LightningDataModule, LightningModule,
-                               Trainer)
+from pytorch_lightning import Callback, LightningDataModule, LightningModule, Trainer
 from pytorch_lightning.loggers import LightningLoggerBase
 
 from src.utils import get_logger
@@ -26,7 +25,6 @@ def cae_train(config: DictConfig):
     np.set_printoptions(threshold=10000)
     torch.set_printoptions(threshold=10000)
     default_save_dir = config.save_dir
-
 
     for i in range(config.n_runs):
 
@@ -76,7 +74,7 @@ def cae_train(config: DictConfig):
         # Inference - to be restructed into the model
         log.info("Starting predicting labels")
         cohortney_dm.setup(stage="test")
-        trainer.test(model, cohortney_dm)
+        trainer.test(cohortney_dm)
         pred_labels = model.final_labels
         gt_labels = cohortney_dm.test_data.target
         # saving predicted and actual labels - for graphs and tables
