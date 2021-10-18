@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader, Dataset
 
 from src.utils import make_grid
 from src.utils.cohortney_utils import arr_func, events_tensor, multiclass_fws_array
-from src.utils.data_utils import download_dataset, load_data, load_data_kshape
+from src.utils.data_utils import download_unpack_zip, load_data, load_data_kshape
 
 
 class CohortneyDataset(Dataset):
@@ -76,11 +76,15 @@ class CohortneyDataModule(LightningDataModule):
         """
         Script to download data if necessary
         """
-        data_name = self.data_dir.split("/")[-1]
-        # dictionary with urls to download sequence data
-        with open(self.data_url_json, "r") as url_data:
-            datasets_urls = json.load(url_data)
-        download_dataset(self.data_dir, datasets_urls[data_name])
+        if Path(self.data_dir).exists():
+            print("Data is already in place")
+            return
+        else:
+            data_name = self.data_dir.split("/")[-1]
+            # dictionary with urls to download sequence data
+            with open(self.data_url_json, "r") as url_data:
+                datasets_urls = json.load(url_data)
+                download_unpack_zip(datasets_urls[data_name], self.data_dir)
 
     def setup(self, stage: Optional[str] = None):
         """

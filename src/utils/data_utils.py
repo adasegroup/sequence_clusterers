@@ -13,17 +13,6 @@ from typing import Union, List, Optional, Tuple, Dict
 from tslearn.utils import to_time_series_dataset
 
 
-def download_dataset(data_dir: Union[str, Path], data_url: str):
-    """
-    Download dataset if it is available at predefined URL
-    """
-    if Path(data_dir).exists():
-        print("Data is already in place")
-        return
-    else:
-        download_unpack_zip(data_url, data_dir)
-
-
 def download_unpack_zip(zipurl: str, data_dir):
     """
     Downloads zipped dataset and unpacks it to data directory
