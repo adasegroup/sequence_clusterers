@@ -2,19 +2,29 @@ __all__ = ["Conv1dAutoEncoder"]
 
 import numpy as np
 import pytorch_lightning as pl
+import time
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from sklearn.cluster import KMeans
+from kmeans_pytorch import kmeans
 
 from src.utils import purity
+
+
+def init_weights(m):
+    """
+    Simple weight initialization
+    """
+    if isinstance(m, nn.Conv1d) or isinstance(m, nn.ConvTranspose1d):
+        nn.init.xavier_uniform_(m.weight, gain=nn.init.calculate_gain("relu"))
+        m.bias.data.fill_(0.01)
 
 
 class Conv1dAutoEncoder(pl.LightningModule):
     """
     Main block of convolutional event clustering
-    encoder-decoder architecture allows to create meaningful representation of chortney features
+    encoder-decoder architecture allows to create representation of Cohortney features
     """
 
     def __init__(
@@ -40,6 +50,7 @@ class Conv1dAutoEncoder(pl.LightningModule):
             nn.BatchNorm1d(32),
             nn.Conv1d(in_channels=32, out_channels=self.out, kernel_size=3),
         )
+        self.encoder.apply(init_weights)
         self.decoder = nn.Sequential(
             nn.ConvTranspose1d(in_channels=self.out, out_channels=32, kernel_size=3),
             nn.BatchNorm1d(32),
@@ -55,6 +66,7 @@ class Conv1dAutoEncoder(pl.LightningModule):
                 in_channels=512, out_channels=in_channels, kernel_size=3
             ),
         )
+        self.decoder.apply(init_weights)
 
         self.train_index = 0
         self.val_index = 0
@@ -62,16 +74,42 @@ class Conv1dAutoEncoder(pl.LightningModule):
         self.val_metric = purity
         self.test_metric = purity
         self.final_labels = None
+        self.time_start = time.time()
 
     def forward(self, x):
+        """
+        Returns embeddings
+        """
         latent = self.encoder(x)
-        return self.decoder(latent)
+        return latent
+
+    def predict_step(self, x):
+        """
+        Returns cluster lables
+        """
+        ans = x.squeeze()
+        ans = ans.reshape(ans.shape[0], ans.shape[1] * ans.shape[2])
+
+        if self.clustering == "kmeans":
+            curr_device = torch.device(
+                "cuda:" + str(ans.get_device()) if torch.cuda.is_available() else "cpu"
+            )
+            cluster_ids_x, cluster_centers = kmeans(
+                X=ans,
+                num_clusters=self.num_clusters,
+                distance="euclidean",
+                device=curr_device,
+            )
+        else:
+            raise Exception(f"Clusterization: {self.clustering} is not supported")
+
+        return cluster_ids_x
 
     def training_step(self, batch, batch_idx):
         x, gts = batch
-        loss = torch.nn.MSELoss()(self(x), x)
-        embedds = self.predict_step(x)
-        preds = self.clusterize(embedds)
+        latent = self(x)
+        loss = torch.nn.MSELoss()(self.decoder(latent), x)
+        preds = self.predict_step(latent)
         self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         return {"loss": loss, "preds": preds, "gts": gts}
 
@@ -82,13 +120,14 @@ class Conv1dAutoEncoder(pl.LightningModule):
             labels = torch.cat([labels, outputs[i]["preds"]], dim=0)
             gt_labels = torch.cat([gt_labels, outputs[i]["gts"]], dim=0)
         pur = self.train_metric(gt_labels, labels)
+        self.log("train_time", time.time() - self.time_start, prog_bar=False)
         self.log("train_pur", pur, prog_bar=True)
 
     def validation_step(self, batch, batch_idx):
         x, gts = batch
-        loss = torch.nn.MSELoss()(self(x), x)
-        embedds = self.predict_step(x)
-        preds = self.clusterize(embedds)
+        latent = self(x)
+        loss = torch.nn.MSELoss()(self.decoder(latent), x)
+        preds = self.predict_step(latent)
         self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         return {"loss": loss, "preds": preds, "gts": gts}
 
@@ -103,9 +142,9 @@ class Conv1dAutoEncoder(pl.LightningModule):
 
     def test_step(self, batch, batch_idx: int):
         x, gts = batch
-        loss = torch.nn.MSELoss()(self(x), x)
-        embedds = self.predict_step(x)
-        preds = self.clusterize(embedds)
+        latent = self(x)
+        loss = torch.nn.MSELoss()(self.decoder(latent), x)
+        preds = self.predict_step(latent)
         self.log("test_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         return {"loss": loss, "preds": preds, "gts": gts}
 
@@ -121,42 +160,6 @@ class Conv1dAutoEncoder(pl.LightningModule):
         pur = self.test_metric(gt_labels, labels)
         self.final_labels = labels
         self.log("test_pur", pur, prog_bar=True)
-
-    def predict_step(self, batch):
-        """
-        Returns embeddings
-        """
-        ans = self.encoder(batch)
-        ans = ans.squeeze()
-        ans = ans.reshape(ans.shape[0], ans.shape[1] * ans.shape[2])
-
-        return ans
-
-    def clusterize(self, embeddings) -> torch.LongTensor:
-        """
-        Performs clusterization with provided embeddings
-        """
-        if self.clustering == "kmeans-sklearn":
-            kmeans = KMeans(
-                n_clusters=self.num_clusters,
-                init="k-means++",
-                max_iter=500,
-                n_init=10,
-                random_state=0,
-            )
-            # to be refactored
-            # or to be used with torch-kmeans
-            if embeddings.is_cuda:
-                pred_y = kmeans.fit_predict(embeddings.cpu().detach().numpy())
-                pred_y = torch.LongTensor(pred_y)
-                pred_y = pred_y.cuda()
-            else:
-                pred_y = kmeans.fit_predict(embeddings)
-                pred_y = torch.LongTensor(pred_y)
-        else:
-            raise Exception(f"Clusterization: {self.clustering} is not supported")
-
-        return pred_y
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=0.003)

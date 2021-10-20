@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 import torch
+import yaml
 import json
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
@@ -36,7 +37,7 @@ class CohortneyDataModule(LightningDataModule):
     def __init__(
         self,
         data_dir: Union[str, Path] = "./",
-        data_url_json: Union[str, Path] = "./",
+        data_config_yaml: Union[str, Path] = "./",
         maxsize: Optional[int] = None,
         maxlen: int = -1,
         train_val_split: float = 0.8,
@@ -55,7 +56,11 @@ class CohortneyDataModule(LightningDataModule):
     ):
         super().__init__()
         self.data_dir = data_dir
-        self.data_url_json = data_url_json
+        with open(data_config_yaml, "r") as stream:
+            self.data_config = yaml.safe_load(stream)
+        data_name = self.data_dir.split("/")[-1]
+        self.num_clusters = self.data_config[data_name]["num_clusters"]
+        self.num_events = self.data_config[data_name]["num_events"]
         self.maxsize = maxsize
         self.maxlen = maxlen
         self.train_val_split = train_val_split
@@ -82,9 +87,7 @@ class CohortneyDataModule(LightningDataModule):
         else:
             data_name = self.data_dir.split("/")[-1]
             # dictionary with urls to download sequence data
-            with open(self.data_url_json, "r") as url_data:
-                datasets_urls = json.load(url_data)
-                download_unpack_zip(datasets_urls[data_name], self.data_dir)
+            download_unpack_zip(self.data_config[data_name], self.data_dir)
 
     def setup(self, stage: Optional[str] = None):
         """
@@ -113,14 +116,12 @@ class CohortneyDataModule(LightningDataModule):
 
         # Assign train/val datasets for use in dataloaders
         if stage == "fit" or stage is None:
-
             permutation = np.random.permutation(len(self.dataset))
             split = int(self.train_val_split * len(self.dataset))
             self.train_data = CohortneyDataset(
                 self.dataset.data[permutation[:split]],
                 self.dataset.target[permutation[:split]],
             )
-            # self.val_data = self.dataset[permutation[split : len(self.dataset)]]
             self.val_data = CohortneyDataset(
                 self.dataset.data[permutation[split : len(self.dataset)]],
                 self.dataset.target[permutation[split : len(self.dataset)]],
@@ -128,6 +129,7 @@ class CohortneyDataModule(LightningDataModule):
 
         # Assign test dataset for use in dataloader
         if stage == "test":
+            print(len(self.dataset))
             self.test_data = self.dataset
 
     def train_dataloader(self):

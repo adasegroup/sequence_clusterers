@@ -1,0 +1,64 @@
+sin_K2_C5: 
+    url: "https://www.dropbox.com/s/hn37oyidt9joj2p/sin_K2_C5.zip"
+    num_clusters: 2
+    num_events: 5
+sin_K3_C5: 
+    url: "https://www.dropbox.com/s/hn37oyidt9joj2p/sin_K2_C5.zip"
+    num_clusters: 3
+    num_events: 5
+sin_K4_C5: 
+    url: "https://www.dropbox.com/s/hn37oyidt9joj2p/sin_K2_C5.zip"
+    num_clusters: 4
+    num_events: 5
+sin_K5_C5: 
+    url: "https://www.dropbox.com/s/hn37oyidt9joj2p/sin_K2_C5.zip"
+    num_clusters: 5
+    num_events: 5
+exp_K2_C5: 
+    url: "https://www.dropbox.com/s/ertguufarzvwp3l/K2_C5.zip"
+    num_clusters: 2
+    num_events: 5
+exp_K3_C5: 
+    url: "https://www.dropbox.com/s/ertguufarzvwp3l/K2_C5.zip"
+    num_clusters: 3
+    num_events: 5
+exp_K4_C5: 
+    url: "https://www.dropbox.com/s/ertguufarzvwp3l/K2_C5.zip"
+    num_clusters: 4
+    num_events: 5
+exp_K5_C5: 
+    url: "https://www.dropbox.com/s/ertguufarzvwp3l/K2_C5.zip"
+    num_clusters: 5
+    num_events: 5
+trunc_K2_C5: 
+    url: "https://www.dropbox.com/s/ertguufarzvwp3l/K2_C5.zip"
+    num_clusters: 2
+    num_events: 5
+trunc_K3_C5: 
+    url: "https://www.dropbox.com/s/ertguufarzvwp3l/K2_C5.zip"
+    num_clusters: 3
+    num_events: 5
+trunc_K4_C5: 
+    url: "https://www.dropbox.com/s/ertguufarzvwp3l/K2_C5.zip"
+    num_clusters: 4
+    num_events: 5
+trunc_K5_C5: 
+    url: "https://www.dropbox.com/s/ertguufarzvwp3l/K2_C5.zip"
+    num_clusters: 5
+    num_events: 5
+Linkedin: 
+    url: "https://www.dropbox.com/s/kliukm2j4mp5b94/Linkedin.zip"
+    num_clusters: 9
+    num_events: 82
+IPTV: 
+    url: "https://www.dropbox.com/s/kliukm2j4mp5b94/Linkedin.zip"
+    num_clusters: 13
+    num_events: 16
+ATM: 
+    url: "https://www.dropbox.com/s/kliukm2j4mp5b94/Linkedin.zip"
+    num_clusters: 6
+    num_events: 7
+Age: 
+    url: "https://www.dropbox.com/s/kliukm2j4mp5b94/Linkedin.zip"
+    num_clusters: 4
+    num_events: 64

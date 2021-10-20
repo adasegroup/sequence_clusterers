@@ -64,20 +64,20 @@ def cae_train(config: DictConfig):
         # Init lightning model
         log.info(f"Instantiating model <{config.model._target_}>")
         config.model.in_channels = cohortney_dm.train_data.data.shape[1]
-        config.model.num_clusters = config.num_clusters
+        config.model.num_clusters = cohortney_dm.num_clusters
         model: LightningModule = hydra.utils.instantiate(config.model)
 
         # Train the model
-        log.info("Starting training!")
-        trainer.fit(model, cohortney_dm)
 
-        # Inference - to be restructed into the model
+        log.info("Starting training")
+        trainer.fit(model, cohortney_dm)
+        # Inference - cluster labels
         log.info("Starting predicting labels")
         cohortney_dm.setup(stage="test")
         trainer.test(model, cohortney_dm)
         pred_labels = model.final_labels
         gt_labels = cohortney_dm.test_data.target
-        # saving predicted and actual labels - for graphs and tables
+        # Saving predicted and actual labels - for graphs and tables
         df = pd.DataFrame(columns=["cluster_id", "cluster_cohortney"])
         df["cluster_id"] = gt_labels.tolist()
         df["cluster_cohortney"] = pred_labels.tolist()

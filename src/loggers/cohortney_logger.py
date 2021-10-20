@@ -9,7 +9,9 @@ class CohortneyCsvLogger(LightningLoggerBase):
     def __init__(self, save_dir):
         super().__init__()
         self.save_dir = save_dir
-        self.train_pd_table = pd.DataFrame(columns=["train_loss", "train_pur"])
+        self.train_pd_table = pd.DataFrame(
+            columns=["train_loss", "train_pur", "train_time"]
+        )
         self.val_pd_table = pd.DataFrame(columns=["val_loss", "val_pur"])
         self.test_results = pd.DataFrame(columns=["test_loss", "test_pur"])
 
@@ -74,6 +76,7 @@ class CohortneyCsvLogger(LightningLoggerBase):
             self.train_pd_table.loc[len(self.train_pd_table)] = [
                 metrics["train_loss"],
                 metrics["train_pur"],
+                metrics["train_time"],
             ]
         elif "val_loss" in metrics:
             self.val_pd_table.loc[len(self.val_pd_table)] = [
@@ -99,5 +102,4 @@ class CohortneyCsvLogger(LightningLoggerBase):
         # finishes goes here
         self.train_pd_table.to_csv(self.save_dir + "/training.csv")
         self.val_pd_table.to_csv(self.save_dir + "/validation.csv")
-        self.test_results.to_csv(self.save_dir + "/final_test_results.csv")
-
+        self.test_results.to_csv(self.save_dir + "/test_results.csv")
