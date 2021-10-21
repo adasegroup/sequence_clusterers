@@ -152,8 +152,7 @@ class TslearnDataModule(LightningDataModule):
     def __init__(
         self,
         data_dir: Union[str, Path] = "./",
-        num_clusters: int = 2,
-        num_events: int = 2,
+        data_config_yaml: Union[str, Path] = "./",
         maxsize: Optional[int] = None,
         maxlen: int = -1,
         ext: str = "csv",
@@ -164,7 +163,11 @@ class TslearnDataModule(LightningDataModule):
     ):
         super().__init__()
         self.data_dir = data_dir
-        self.num_events = num_events
+        with open(data_config_yaml, "r") as stream:
+            self.data_config = yaml.safe_load(stream)
+        data_name = self.data_dir.split("/")[-1]
+        self.num_clusters = self.data_config[data_name]["num_clusters"]
+        self.num_events = self.data_config[data_name]["num_events"]
         self.maxsize = maxsize
         self.maxlen = maxlen
         self.ext = ext
@@ -174,9 +177,16 @@ class TslearnDataModule(LightningDataModule):
         self.num_workers = num_workers
 
     def prepare_data(self):
-        # download
-        data_name = self.data_dir.split("/")[-1]
-        download_dataset(self.data_dir, data_name)
+        """
+        Script to download data if necessary
+        """
+        if Path(self.data_dir).exists():
+            print("Data is already in place")
+            return
+        else:
+            data_name = self.data_dir.split("/")[-1]
+            # dictionary with urls to download sequence data
+            download_unpack_zip(self.data_config[data_name], self.data_dir)
 
     def setup(self, stage: Optional[str] = None):
         print("Transforming data")
@@ -197,12 +207,9 @@ class TslearnDataModule(LightningDataModule):
         else:
             gt_ids = [0] * len(ts_reshaped)
             gt_ids = torch.LongTensor(ts_reshaped)
-        self.dataset = CohortneyDataset(ts_reshaped, gt_ids)
-        if self.maxsize is not None:
-            self.dataset = self.dataset[: self.maxsize]
+        self.dataset = CohortneyDataset(ts_reshaped, gt_ids, self.maxsize)
         # Assign train/val datasets for use in dataloaders
         if stage == "fit" or stage is None:
-
             self.train_data = self.dataset
             self.val_data = self.dataset
 

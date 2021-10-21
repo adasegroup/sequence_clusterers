@@ -2,22 +2,24 @@ seed: 42
 exp_name: default
 defaults:
     - _self_
-    - datamodule: cohortney_datamodule.yaml #tslearn_datamodule.yaml
+    - datamodule: tslearn_datamodule.yaml #cohortney_datamodule.yaml
     - trainer: default.yaml
-    - model: conv1d_autoencoder.yaml
+    - model: tslearn.yaml #conv1d_autoencoder.yaml
     - callbacks: default.yaml  
     - experiment: null # test_tube.yaml
     - logger: cohortney_logger.yaml # cohortney_logger.yaml # csv_logger.yaml  # test_tube.yaml
     - aux_module: null
 
 
-n_runs: 10
-num_epochs: 50
+n_runs: 2
+num_epochs: 5
 work_dir: ${hydra:runtime.cwd}
 data_config_file: ${work_dir}/src/datamodules/datasets_urls.yaml
 data_name: exp_K2_C5
 data_dir: ${work_dir}/data/${data_name}
-save_dir: ${work_dir}/experiments/cae/${data_name}
+tslearn_method: k_shape # k_means_softdtw
+save_dir: ${work_dir}/experiments/${tslearn_method}/${data_name}
+
 # use `python run.py debug=true` for easy debugging!
 # this will run 1 train, val and test loop with only 1 batch
 # equivalent to running `python run.py trainer.fast_dev_run=true`

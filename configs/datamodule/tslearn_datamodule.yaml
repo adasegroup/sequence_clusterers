@@ -1,8 +1,7 @@
 _target_: src.datamodules.datamodule.TslearnDataModule
 
 data_dir: ${data_dir} # data_dir is specified in config.yaml
-num_clusters: ${num_clusters} # specified in config.yaml
-num_events: ${num_events}
+data_config_yaml: ${data_config_file}
 maxsize: null
 maxlen: 100
 ext: "csv"
