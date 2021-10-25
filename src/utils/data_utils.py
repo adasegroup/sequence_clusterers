@@ -1,15 +1,16 @@
 import os
 import re
-import zipfile
 import shutil
-
-import torch
+import zipfile
 from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
+
 import numpy as np
 import pandas as pd
-
-from pathlib import Path
-from typing import Union, List, Optional, Tuple, Dict
+import torch
+import tqdm
+import tsfresh
+from tsfresh.feature_extraction import MinimalFCParameters, EfficientFCParameters
 from tslearn.utils import to_time_series_dataset
 
 
@@ -23,7 +24,6 @@ def download_unpack_zip(zipurl: str, data_dir):
     if res_code != 0:
         raise Exception("Encountered error while downloading data")
     zip_name = zipurl.split("/")[-1]
-    # unpack(lfilename=os.path.join(res_path, zip_name), dir=res_path)
     lfilename = os.path.join(res_path, zip_name)
     with zipfile.ZipFile(lfilename) as file:
         os.makedirs(res_path, exist_ok=True)
@@ -212,7 +212,9 @@ def sep_hawkes_proc(user_list, event_type):
     return sep_seqs
 
 
-def get_partition(sample, num_of_steps, num_of_event_types, end_time=None):
+def get_partition(
+    sample, num_of_steps, num_of_event_types, time_col, event_col, end_time=None
+):
     """
     Transforms a sample into partition
     inputs:
@@ -223,8 +225,11 @@ def get_partition(sample, num_of_steps, num_of_event_types, end_time=None):
     outputs:
             partition - torch.tensor, size = (num_of_steps, num_of_classes + 1)
     """
+    sample = sample.loc[:, [time_col, event_col]].copy()
+    sample = sample.sort_values(by=[time_col])
+    sample = sample.reset_index().loc[:, [time_col, event_col]].copy()
     if end_time is None:
-        end_time = sample["time"][len(sample["time"]) - 1]
+        end_time = sample[time_col][len(sample[time_col]) - 1]
 
     partition = torch.zeros(num_of_steps, num_of_event_types + 1)
 
@@ -233,28 +238,109 @@ def get_partition(sample, num_of_steps, num_of_event_types, end_time=None):
     partition[:, 0] = end_time / num_of_steps
 
     # converting time to timestamps
-    sample["time"] = (sample["time"] / dt).astype(int)
-    mask = sample["time"] == num_of_steps
-    sample.loc[mask, "time"] -= 1
+    sample[time_col] = (sample[time_col] / dt).astype(int)
+    mask = sample[time_col] == num_of_steps
+    sample.loc[mask, time_col] -= 1
 
     # counting points
     sample = sample.reset_index()
-    sample = sample.groupby(["time", "event"]).count()
+    sample = sample.groupby([time_col, event_col]).count()
     sample = sample.reset_index()
-    sample.columns = ["time", "event", "num"]
+    sample.columns = [time_col, event_col, "num"]
     try:
-        sample["event"] = sample["event"].astype(int)
+        sample[event_col] = sample[event_col].astype(int)
     except:
         global events
         global cur
-        for i in range(len(sample["event"])):
-            if sample["event"].iloc[i] not in events:
-                events[sample["event"].iloc[i]] = cur
+        for i in range(len(sample[event_col])):
+            if sample[event_col].iloc[i] not in events:
+                events[sample[event_col].iloc[i]] = cur
                 cur += 1
-            sample["event"].iloc[i] = events[sample["event"].iloc[i]]
-        sample["event"] = sample["event"].astype(int)
+            sample[event_col].iloc[i] = events[sample[event_col].iloc[i]]
+        sample[event_col] = sample[event_col].astype(int)
 
     # computing partition
     temp = torch.from_numpy(sample.to_numpy())
     partition[temp[:, 0], temp[:, 1] + 1] = temp[:, 2].float()
     return partition
+
+
+def get_dataset(data_dir, n_classes, n_steps, time_col, event_col, ext, n_files=None):
+    """
+    Reads dataset
+    inputs:
+            data_dir - str, path to csv files with dataset
+            n_classes - int, number of event types
+            n_steps - int, number of steps in partitions
+            time_col - title of time column
+            event_col - title of event column
+            ext - extension of individual sequence file
+    outputs:
+            data - torch.Tensor, size = (N, n_steps, n_classes + 1), dataset
+            target - torch.Tensor, size = (N), true labels or None
+    """
+    # searching for files
+    files = os.listdir(data_dir)
+    target = None
+    last_event_target = False
+
+    # reading data
+    files = sorted(
+        os.listdir(data_dir),
+        key=lambda x: int(re.sub(fr".{ext}", "", x))
+        if re.sub(fr".{ext}", "", x).isdigit()
+        else 0,
+    )
+    # reading target
+    if "clusters.csv" in files:
+        files.remove("clusters.csv")
+        target = torch.Tensor(
+            pd.read_csv(os.path.join(data_dir, "clusters.csv"))["cluster_id"]
+        )
+        if n_files is not None:
+            target = target[:n_files]
+    if "info.json" in files:
+        files.remove("info.json")
+    if n_files is not None:
+        files = files[:n_files]
+    data = torch.zeros(len(files), n_steps, n_classes + 1)
+    for i, f in tqdm.tqdm(enumerate(files)):
+        df = pd.read_csv(os.path.join(data_dir, f))
+        data[i, :, :] = get_partition(df, n_steps, n_classes, time_col, event_col)
+
+    return data, target
+
+
+def reshape_data_tsfresh(seq_dataset, n_classes, n_steps, settings):
+    """
+    Transform sequences dataset into dataset of features
+    """
+    len_data = seq_dataset.shape[0]
+    data_divided = []
+    for i in range(n_classes):
+        data_divided.append(seq_dataset[:, :, i].reshape(-1))
+    to_extract = []
+    for i in range(n_classes):
+        ids = np.arange(len_data).repeat(n_steps)
+        tmp = np.vstack((ids, data_divided[i]))
+        tmp = tmp.T
+        to_extract.append(pd.DataFrame(data=tmp, columns=["id", "value"]))
+    tfs = []
+    # parameters of tsfresh features extraction
+    if settings == "efficient":
+        settings = EfficientFCParameters()
+    elif settings == "minimal":
+        settings = MinimalFCParameters()
+    for i in range(n_classes):
+        tf = tsfresh.extract_features(
+            to_extract[i], column_id="id", default_fc_parameters=settings
+        )
+        tfs.append(tf)
+    data_feat = pd.concat(
+        [tfs[i].reindex(tfs[0].index) for i in range(n_classes)], axis=1
+    )
+    print(data_feat.shape)
+    data_feat.fillna(0, inplace=True)
+    data_feat.replace([np.inf, -np.inf], 0, inplace=True)
+    data_tensor = torch.from_numpy(data_feat.values).float()
+    return data_tensor

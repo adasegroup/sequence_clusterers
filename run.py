@@ -2,7 +2,7 @@ import hydra
 from omegaconf import DictConfig
 from pytorch_lightning import seed_everything
 
-from src import train, cae_train, deep_cluster_train, tslearn_infer
+from src import train, cae_train, deep_cluster_train, tslearn_infer, tsfresh_infer
 
 
 @hydra.main(config_path="configs/", config_name="config.yaml")
@@ -20,6 +20,8 @@ def main(config: DictConfig):
         train(config)
     elif config.task_type == "tslearn":
         tslearn_infer(config)
+    elif config.task_type == "tsfresh":
+        tsfresh_infer(config)
     else:
         raise Exception(f"Warning {config.task_type} is not supported")
 
