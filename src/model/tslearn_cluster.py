@@ -28,6 +28,7 @@ def tslearn_infer(config: DictConfig):
 
         config.save_dir = str(Path(default_save_dir, "exp_" + str(i)))
         Path(config.save_dir).mkdir(parents=True, exist_ok=True)
+        logger.info(f"Dataset: {config.data_name}")
         logger.info(f"Run: {i+1}")
 
         # Init and prepare lightning datamodule

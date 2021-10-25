@@ -12,8 +12,7 @@ logger = logging.getLogger("tslearn")
 
 class TsLearnClusterizer(pl.LightningModule):
     """
-    Main block of convolutional event clustering
-    encoder-decoder architecture allows to create representation of Cohortney features
+    Main block of TsLearn event clustering
     """
 
     def __init__(
@@ -79,7 +78,6 @@ class TsLearnClusterizer(pl.LightningModule):
         pur = self.test_metric(gt_labels, labels)
         logger.info(f"test purity: {pur}")
         self.final_labels = labels
-        return {"preds": torch.tensor(preds), "gts": gts}
 
     def configure_optimizers(self):
         pass

@@ -11,7 +11,7 @@ defaults:
     - aux_module: null
 
 
-n_runs: 2
+n_runs: 10
 num_epochs: 5
 work_dir: ${hydra:runtime.cwd}
 data_config_file: ${work_dir}/src/datamodules/datasets_urls.yaml
