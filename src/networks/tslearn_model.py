@@ -79,6 +79,7 @@ class TsLearnClusterizer(pl.LightningModule):
         pur = self.test_metric(gt_labels, labels)
         logger.info(f"test purity: {pur}")
         self.final_labels = labels
+        return {"preds": torch.tensor(preds), "gts": gts}
 
     def configure_optimizers(self):
         pass
