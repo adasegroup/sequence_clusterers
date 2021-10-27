@@ -60,7 +60,7 @@ trunc_K5_C5:
     num_steps: 128
 Linkedin: 
     url: "https://www.dropbox.com/s/cm88x7z6wcbmv5p/Linkedin.zip?dl=1"
-    num_clusters: 9
+    num_clusters: 7
     num_events: 82
     num_steps: 6
 IPTV: 
