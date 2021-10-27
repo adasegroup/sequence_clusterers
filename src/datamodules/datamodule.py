@@ -259,7 +259,7 @@ class TsfreshDataModule(LightningDataModule):
         data_name = self.data_dir.split("/")[-1]
         self.num_clusters = self.data_config[data_name]["num_clusters"]
         self.num_events = self.data_config[data_name]["num_events"]
-        self.num_steps = 128  # self.data_config[data_name]["num_steps"]
+        self.num_steps = self.data_config[data_name]["num_steps"]
         self.maxsize = maxsize
         self.maxlen = maxlen
         self.ext = ext
