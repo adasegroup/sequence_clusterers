@@ -13,6 +13,8 @@ import tsfresh
 from tsfresh.feature_extraction import MinimalFCParameters, EfficientFCParameters
 from tslearn.utils import to_time_series_dataset
 
+events = {}
+cur = 0
 
 def download_unpack_zip(zipurl: str, data_dir):
     """

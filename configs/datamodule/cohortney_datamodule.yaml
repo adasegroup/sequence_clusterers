@@ -10,7 +10,7 @@ time_col: "time"
 event_col: "event"
 datetime: False
 batch_size: 128
-num_workers: 8
+num_workers: 4
 gamma: 1.4
 Tb: 7e-06
 Th: 80

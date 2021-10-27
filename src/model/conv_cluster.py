@@ -25,12 +25,17 @@ def cae_train(config: DictConfig):
     np.set_printoptions(threshold=10000)
     torch.set_printoptions(threshold=10000)
     default_save_dir = config.save_dir
+    # Init and prepare lightning datamodule
+    log.info(f"Instantiating datamodule <{config.datamodule._target_}>")
+    cohortney_dm: LightningDataModule = hydra.utils.instantiate(config.datamodule)
+    cohortney_dm.prepare_data()
 
     for i in range(config.n_runs):
 
         config.save_dir = str(Path(default_save_dir, "exp_" + str(i)))
         Path(config.save_dir).mkdir(parents=True, exist_ok=True)
         log.info(f"Run: {i+1}")
+        log.info(f"Dataset: {config.data_name}")
         # Init callbacks
         callbacks: List[Callback] = []
         if "callbacks" in config:
@@ -55,12 +60,8 @@ def cae_train(config: DictConfig):
             config.trainer, callbacks=callbacks, logger=logger, _convert_="partial"
         )
 
-        # Init and prepare lightning datamodule
-        log.info(f"Instantiating datamodule <{config.datamodule._target_}>")
-        cohortney_dm: LightningDataModule = hydra.utils.instantiate(config.datamodule)
-        cohortney_dm.prepare_data()
-        cohortney_dm.setup(stage="fit")
 
+        cohortney_dm.setup(stage="fit")
         # Init lightning model
         log.info(f"Instantiating model <{config.model._target_}>")
         config.model.in_channels = cohortney_dm.train_data.data.shape[1]

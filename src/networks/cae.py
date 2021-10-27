@@ -89,7 +89,6 @@ class Conv1dAutoEncoder(pl.LightningModule):
         """
         ans = x.squeeze()
         ans = ans.reshape(ans.shape[0], ans.shape[1] * ans.shape[2])
-
         if self.clustering == "kmeans":
             curr_device = torch.device(
                 "cuda:" + str(ans.get_device()) if torch.cuda.is_available() else "cpu"
@@ -102,8 +101,7 @@ class Conv1dAutoEncoder(pl.LightningModule):
             )
         else:
             raise Exception(f"Clusterization: {self.clustering} is not supported")
-
-        return cluster_ids_x
+        return cluster_ids_x.cuda()
 
     def training_step(self, batch, batch_idx):
         x, gts = batch
@@ -125,6 +123,7 @@ class Conv1dAutoEncoder(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         x, gts = batch
+
         latent = self(x)
         loss = torch.nn.MSELoss()(self.decoder(latent), x)
         preds = self.predict_step(latent)

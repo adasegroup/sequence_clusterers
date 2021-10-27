@@ -80,24 +80,21 @@ class CohortneyDataModule(LightningDataModule):
         self.Th = Th
         self.N = N
         self.n = n
+        self.dataset = None
         self.type_ = type_
 
     def prepare_data(self):
         """
         Script to download data if necessary
+        Data transform for conv1d
         """
         if Path(self.data_dir).exists():
             print("Data is already in place")
-            return
         else:
             data_name = self.data_dir.split("/")[-1]
             # dictionary with urls to download sequence data
             download_unpack_zip(self.data_config[data_name], self.data_dir)
-
-    def setup(self, stage: Optional[str] = None):
-        """
-        Transforming dataset for conv1d_encoder
-        """
+        
         print("Transforming data")
         ss, Ts, class2idx, user_list, gt_ids = load_data(
             self.data_dir,
@@ -118,8 +115,12 @@ class CohortneyDataModule(LightningDataModule):
         _, events_fws_mc = arr_func(user_list, T_j, delta_T, multiclass_fws_array)
         mc_batch = events_tensor(events_fws_mc)
         self.dataset = CohortneyDataset(mc_batch, gt_ids, self.maxsize)
-
-        # Assign train/val datasets for use in dataloaders
+    
+    
+    def setup(self, stage: Optional[str] = None):
+        """
+        Assign train/val datasets for use in dataloaders
+        """
         if stage == "fit" or stage is None:
             permutation = np.random.permutation(len(self.dataset))
             split = int(self.train_val_split * len(self.dataset))
