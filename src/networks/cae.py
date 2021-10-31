@@ -7,8 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from kmeans_pytorch import kmeans
-
+from fast_pytorch_kmeans import KMeans
 from src.utils import purity
 
 
@@ -90,18 +89,20 @@ class Conv1dAutoEncoder(pl.LightningModule):
         ans = x.squeeze()
         ans = ans.reshape(ans.shape[0], ans.shape[1] * ans.shape[2])
         if self.clustering == "kmeans":
-            curr_device = torch.device(
-                "cuda:" + str(ans.get_device()) if torch.cuda.is_available() else "cpu"
-            )
-            cluster_ids_x, cluster_centers = kmeans(
-                X=ans,
-                num_clusters=self.num_clusters,
-                distance="euclidean",
-                device=curr_device,
-            )
+            #curr_device = torch.device(
+            #    "cuda:" + str(ans.get_device()) if torch.cuda.is_available() else "cpu"
+            #)
+            #cluster_ids_x, cluster_centers = kmeans(
+            #    X=ans,
+            #    num_clusters=self.num_clusters,
+            #    distance="euclidean",
+            #    device=curr_device,
+            #)
+            kmeans = KMeans(n_clusters=self.num_clusters, max_iter=100, mode='euclidean', verbose=1)
+            cluster_ids = kmeans.fit_predict(ans)
         else:
             raise Exception(f"Clusterization: {self.clustering} is not supported")
-        return cluster_ids_x.cuda()
+        return cluster_ids
 
     def training_step(self, batch, batch_idx):
         x, gts = batch
