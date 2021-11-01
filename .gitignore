@@ -125,6 +125,8 @@ venv.bak/
 dmypy.json
 # Pyre type checker
 .pyre/
+# checkpoints
+*.ckpt
 
 ### VisualStudioCode
 .vscode/*
