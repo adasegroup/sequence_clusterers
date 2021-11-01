@@ -50,10 +50,7 @@ def cae_train(config: DictConfig):
         if "logger" in config:
             for _, lg_conf in config["logger"].items():
                 if "_target_" in lg_conf:
-                    # if "save_dir" in lg_conf:
-                    #     lg_conf.save_dir = config.save_dir
                     log.info(f"Instantiating logger <{lg_conf._target_}>")
-                    # lg_conf.version = "exp_" + str(i)
                     logger.append(hydra.utils.instantiate(lg_conf))
 
         trainer: Trainer = hydra.utils.instantiate(

@@ -2,15 +2,15 @@ _target_: src.datamodules.datamodule.CohortneyDataModule
 
 data_dir: ${data_dir}
 data_config_yaml: ${data_config_file}
-maxsize: 50000
-maxlen: -1
+maxsize: 20000
+maxlen: 100
 train_val_split: 0.8
 ext: "csv"
 time_col: "time"
 event_col: "event"
 datetime: False
 batch_size: 32
-num_workers: 2
+num_workers: 8
 gamma: 1.4
 Tb: 7e-06
 Th: 80
