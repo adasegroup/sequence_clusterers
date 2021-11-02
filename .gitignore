@@ -127,7 +127,13 @@ dmypy.json
 .pyre/
 # checkpoints
 *.ckpt
-
+*.pt
+*.pkl
+experiments/dmhp/**/*.json
+# tablesplots
+tablesplots/*.csv
+tablesplots/*.tex
+tablesplots/*.pdf
 ### VisualStudioCode
 .vscode/*
 !.vscode/settings.json
