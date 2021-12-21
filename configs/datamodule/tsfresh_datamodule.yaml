@@ -3,10 +3,10 @@ _target_: src.datamodules.datamodule.TsfreshDataModule
 data_dir: ${data_dir} # data_dir is specified in config.yaml
 data_config_yaml: ${data_config_file}
 maxsize: null
-maxlen: 100
+maxlen: 1000
 ext: "csv"
 time_col: "time"
 event_col: "event"
-feature_settings: "minimal"
+feature_settings: "complete"
 batch_size: 128
 num_workers: 0

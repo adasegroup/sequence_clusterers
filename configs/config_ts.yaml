@@ -19,7 +19,7 @@ data_name: exp_K2_C5
 data_dir: ${work_dir}/data/${data_name}
 tslearn_method: k_shape # k_means_softdtw
 tsfresh_method: gmm # gmm
-save_dir: ${work_dir}/experiments/${tsfresh_method}/${data_name}
+save_dir: ${work_dir}/experiments/tsfresh_${tsfresh_method}/${data_name}
 
 # use `python run.py debug=true` for easy debugging!
 # this will run 1 train, val and test loop with only 1 batch

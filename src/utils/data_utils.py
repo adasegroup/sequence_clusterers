@@ -10,7 +10,7 @@ import pandas as pd
 import torch
 import tqdm
 import tsfresh
-from tsfresh.feature_extraction import MinimalFCParameters, EfficientFCParameters
+from tsfresh.feature_extraction import ComprehensiveFCParameters, MinimalFCParameters, EfficientFCParameters
 from tslearn.utils import to_time_series_dataset
 
 events = {}
@@ -329,7 +329,9 @@ def reshape_data_tsfresh(seq_dataset, n_classes, n_steps, settings):
         to_extract.append(pd.DataFrame(data=tmp, columns=["id", "value"]))
     tfs = []
     # parameters of tsfresh features extraction
-    if settings == "efficient":
+    if settings == "complete":
+        settings = ComprehensiveFCParameters()
+    elif settings == "efficient":
         settings = EfficientFCParameters()
     elif settings == "minimal":
         settings = MinimalFCParameters()
