@@ -60,7 +60,7 @@ trunc_K5_C5:
     num_steps: 128
 Linkedin: 
     url: "https://www.dropbox.com/s/cm88x7z6wcbmv5p/Linkedin.zip?dl=1"
-    num_clusters: 7
+    num_clusters: 9
     num_events: 82
     num_steps: 6
 IPTV: 
@@ -74,10 +74,30 @@ ATM:
     num_events: 7
     num_steps: 110
 Age: 
-    url: "https://www.dropbox.com/s/51mmut2212c870o/Age.zip?dl=1"
+    url: "https://www.dropbox.com/s/kliukm2j4mp5b94/Linkedin.zip"
     num_clusters: 4
     num_events: 60
     num_steps: 512
 Booking:
     url: "https://www.dropbox.com/s/6g66lmzduys2dxz/booking.zip?dl=1"
     num_steps: 12
+Retweets:
+    url: "https://"
+    num_clusters: 3
+    num_events: 3
+Memes:
+    url: "https://"
+    num_clusters: 757
+    num_events: 5000
+Mimic:
+    url: "https://"
+    num_clusters: 8
+    num_events: 75
+Stackoverflow:
+    url: "https://"
+    num_clusters: 9
+    num_events: 22
+Bookorder:
+    url: "https://"
+    num_clusters: 2
+    num_events: 2

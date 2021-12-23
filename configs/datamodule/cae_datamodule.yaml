@@ -1,4 +1,4 @@
-_target_: src.datamodules.datamodule.CohortneyDataModule
+_target_: src.datamodules.cae_datamodule.CAEDataModule
 
 data_dir: ${data_dir}
 data_config_yaml: ${data_config_file}

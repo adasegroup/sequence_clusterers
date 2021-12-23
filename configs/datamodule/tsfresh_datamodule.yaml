@@ -1,6 +1,6 @@
-_target_: src.datamodules.datamodule.TsfreshDataModule
+_target_: src.datamodules.ts_datamodule.TsfreshDataModule
 
-data_dir: ${data_dir} # data_dir is specified in config.yaml
+data_dir: ${data_dir} 
 data_config_yaml: ${data_config_file}
 maxsize: null
 maxlen: 1000

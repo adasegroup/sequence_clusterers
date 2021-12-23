@@ -10,11 +10,49 @@ import pandas as pd
 import torch
 import tqdm
 import tsfresh
-from tsfresh.feature_extraction import ComprehensiveFCParameters, MinimalFCParameters, EfficientFCParameters
+from tsfresh.feature_extraction import (
+    ComprehensiveFCParameters,
+    MinimalFCParameters,
+    EfficientFCParameters,
+)
 from tslearn.utils import to_time_series_dataset
 
 events = {}
 cur = 0
+
+
+def pad_time(instances, pad):
+    """Pad the instance to the max seq length in batch."""
+
+    max_len = max(len(inst) for inst in instances)
+
+    batch_seq = np.array([inst + [pad] * (max_len - len(inst)) for inst in instances])
+
+    return torch.tensor(batch_seq, dtype=torch.float32)
+
+
+def pad_type(instances, pad):
+    """Pad the instance to the max seq length in batch."""
+
+    max_len = max(len(inst) for inst in instances)
+
+    batch_seq = np.array([inst + [pad] * (max_len - len(inst)) for inst in instances])
+
+    return torch.tensor(batch_seq, dtype=torch.long)
+
+
+def thp_collate_fn(instances, pad: int = 0):
+    """
+    Collate function, as required by PyTorch.
+    pad - integer to pad all sequences
+    """
+
+    time, gt_cluster, event_type = list(zip(*instances))
+    time = pad_time(time, pad)
+    event_type = pad_type(event_type, pad)
+
+    return time, torch.tensor(gt_cluster, dtype=torch.long), event_type
+
 
 def download_unpack_zip(zipurl: str, data_dir):
     """
@@ -131,6 +169,69 @@ def load_data(
         gt_ids = torch.LongTensor(gt_ids)
 
     return ss, Ts, class2idx, user_list, gt_ids
+
+
+def load_data_thp(
+    data_dir: Union[str, Path],
+    maxlen: int = -1,
+    ext: str = "csv",
+    time_col: str = "time",
+    event_col: str = "event",
+    datetime: bool = False,
+) -> Tuple[List[Dict], List, int, int]:
+    """
+    Loads the sequences saved in the given directory.
+    Args:
+        data_dir    - directory containing sequences
+        maxsize     - maximum number of sequences to load
+        maxlen      - maximum length of sequence, the sequences longer than maxlen will be truncated
+        ext         - extension of files in data_dir directory
+        time_col    - title of column with timestamps
+        event_col   - title of column with event types
+        datetime    - variable indicating if time values in files are represented in datetime format
+    Returns:
+        sequences          - list of torch.Tensor containing sequences. Each tensor has shape (L, 2), where
+                        element is a sequence of pair (time, event type)
+        gt_ids      - list of ground truth cluster labels (if available)
+        num_events - number of types of events in dataset
+        num_clusters - number of clusters in dataset
+    """
+
+    sequences = []
+    classes = set()
+
+    for file in sorted(
+        os.listdir(data_dir),
+        key=lambda x: int(re.sub(fr".{ext}", "", x))
+        if re.sub(fr".{ext}", "", x).isdigit()
+        else 0,
+    ):
+        if file.endswith(f".{ext}") and re.sub(fr".{ext}", "", file).isnumeric():
+
+            df = pd.read_csv(Path(data_dir, file))
+            classes = classes.union(set(df[event_col].unique()))
+            if datetime:
+                df[time_col] = pd.to_datetime(df[time_col])
+                df[time_col] = (df[time_col] - df[time_col][0]) / np.timedelta64(1, "D")
+            else:
+                df[time_col] = df[time_col] - df[time_col][0]
+            if maxlen > 0:
+                df = df.iloc[:maxlen]
+            curr_dict = {}
+            curr_dict["time_since_start"] = df[time_col].tolist()
+            curr_dict["type_event"] = df[event_col].tolist()
+            sequences.append(curr_dict)
+
+    num_events = max(classes) + 1
+
+    gt_ids = None
+    num_clusters = -1
+    if Path(data_dir, "clusters.csv").exists():
+        gt_ids = pd.read_csv(Path(data_dir, "clusters.csv"))["cluster_id"].tolist()
+        # gt_ids = torch.LongTensor(gt_ids)
+        num_clusters = int(max(gt_ids) - min(gt_ids)) + 1
+
+    return sequences, gt_ids, num_events, num_clusters
 
 
 def load_data_kshape(

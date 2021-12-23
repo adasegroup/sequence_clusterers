@@ -1,0 +1,12 @@
+_target_: src.networks.Conv1dAutoEncoder
+
+d_model: 64
+d_rnn: 256
+d_inner_hid: 128
+d_k: 16
+d_v: 16
+n_head: 4
+n_layers: 4
+dropout: 0.1
+num_clusters: 1
+clustering_method: "kmeans"

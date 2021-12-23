@@ -2,12 +2,12 @@ seed: 42
 exp_name: default
 defaults:
     - _self_
-    - datamodule: tsfresh_datamodule.yaml #cohortney_datamodule.yaml
+    - datamodule: tsfresh_datamodule.yaml 
     - trainer: default.yaml
-    - model: tsfresh.yaml #conv1d_autoencoder.yaml
+    - model: tsfresh.yaml 
     - callbacks: default.yaml  
-    - experiment: null # test_tube.yaml
-    - logger: cohortney_logger.yaml # cohortney_logger.yaml # csv_logger.yaml  # test_tube.yaml
+    - experiment: null 
+    - logger: cohortney_logger.yaml 
     - aux_module: null
 
 

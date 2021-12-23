@@ -2,7 +2,14 @@ import hydra
 from omegaconf import DictConfig
 from pytorch_lightning import seed_everything
 
-from src import train, cae_train, deep_cluster_train, tslearn_infer, tsfresh_infer
+from src import (
+    train,
+    cae_train,
+    deep_cluster_train,
+    thp_train,
+    tslearn_infer,
+    tsfresh_infer,
+)
 
 
 @hydra.main(config_path="configs/", config_name="config.yaml")
@@ -16,6 +23,8 @@ def main(config: DictConfig):
         deep_cluster_train(config)
     elif config.task_type == "cae":
         cae_train(config)
+    elif config.task_type == "thp":
+        thp_train(config)
     elif config.task_type == "multi_pp":
         train(config)
     elif config.task_type == "tslearn":

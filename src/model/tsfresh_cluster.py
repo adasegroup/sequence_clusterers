@@ -15,7 +15,7 @@ logger = logging.getLogger("tsfresh")
 
 def tsfresh_infer(config: DictConfig):
     """
-    Running tslearn standard method to infer cluster labels
+    Running tsfresh standard method to infer cluster labels
     """
 
     np.set_printoptions(threshold=10000)
