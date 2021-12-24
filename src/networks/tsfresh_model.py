@@ -64,6 +64,7 @@ class TsFreshClusterizer(pl.LightningModule):
 
     def test_step(self, batch, batch_idx: int):
         x, gts = batch
+        
         preds = self.cluster_model.fit_predict(x)
         return {"preds": torch.tensor(preds), "gts": gts}
 
