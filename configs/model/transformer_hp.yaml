@@ -1,4 +1,4 @@
-_target_: src.networks.Conv1dAutoEncoder
+_target_: src.networks.TransformerHP
 
 d_model: 64
 d_rnn: 256
@@ -9,4 +9,8 @@ n_head: 4
 n_layers: 4
 dropout: 0.1
 num_clusters: 1
+smooth: 0.1
+lr: 1e-4
+integral_biased: True
+use_additional_rnn: True
 clustering_method: "kmeans"

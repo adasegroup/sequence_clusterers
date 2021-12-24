@@ -8,11 +8,8 @@ import yaml
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 
-from src.utils import make_grid
-from src.utils.cohortney_utils import arr_func, events_tensor, multiclass_fws_array
 from src.utils.data_utils import (
     download_unpack_zip,
-    get_dataset,
     load_data_thp,
     thp_collate_fn,
 )

@@ -3,7 +3,7 @@ exp_name: default
 defaults:
     - _self_
     - datamodule: thp_datamodule.yaml
-    - trainer: default.yaml # gpu.yaml
+    - trainer: gpu.yaml
     - model: transformer_hp.yaml
     - callbacks: default.yaml  
     - experiment: null # test_tube.yaml

@@ -62,7 +62,6 @@ def thp_train(config: DictConfig):
         model: LightningModule = hydra.utils.instantiate(config.model)
 
         # Train the model
-
         log.info("Starting training")
         trainer.fit(model, thp_dm)
         # Inference - cluster labels
