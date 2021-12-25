@@ -59,6 +59,7 @@ def thp_train(config: DictConfig):
         # Init lightning model
         log.info(f"Instantiating model <{config.model._target_}>")
         config.model.num_clusters = thp_dm.num_clusters
+        config.model.num_types = thp_dm.num_events
         model: LightningModule = hydra.utils.instantiate(config.model)
 
         # Train the model
@@ -69,9 +70,9 @@ def thp_train(config: DictConfig):
         thp_dm.setup(stage="test")
         trainer.test(model, thp_dm)
         pred_labels = model.final_labels
-        gt_labels = thp_dm.test_data.target
+        gt_labels = thp_dm.test_data.gt_labels
         # Saving predicted and actual labels - for graphs and tables
         df = pd.DataFrame(columns=["cluster_id", "cluster_thp"])
-        df["cluster_id"] = gt_labels.tolist()
+        df["cluster_id"] = gt_labels
         df["cluster_thp"] = pred_labels.tolist()
         df.to_csv(Path(config.save_dir, "inferredclusters.csv"))

@@ -23,17 +23,14 @@ cur = 0
 
 def pad_time(instances, pad):
     """Pad the instance to the max seq length in batch."""
-
     max_len = max(len(inst) for inst in instances)
 
     batch_seq = np.array([inst + [pad] * (max_len - len(inst)) for inst in instances])
-
     return torch.tensor(batch_seq, dtype=torch.float32)
 
 
 def pad_type(instances, pad):
     """Pad the instance to the max seq length in batch."""
-
     max_len = max(len(inst) for inst in instances)
 
     batch_seq = np.array([inst + [pad] * (max_len - len(inst)) for inst in instances])
@@ -47,11 +44,11 @@ def thp_collate_fn(instances, pad: int = 0):
     pad - integer to pad all sequences
     """
 
-    time, gt_cluster, event_type = list(zip(*instances))
+    time, event_type, gt_cluster = list(zip(*instances))
     time = pad_time(time, pad)
     event_type = pad_type(event_type, pad)
 
-    return time, torch.tensor(gt_cluster, dtype=torch.long), event_type
+    return time, event_type, torch.tensor(gt_cluster, dtype=torch.long)
 
 
 def download_unpack_zip(zipurl: str, data_dir):

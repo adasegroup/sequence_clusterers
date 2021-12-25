@@ -172,7 +172,6 @@ class TransformerHP(pl.LightningModule):
 
     def __init__(
         self,
-        num_types,
         d_model=256,
         d_rnn=128,
         d_inner=1024,
@@ -180,6 +179,8 @@ class TransformerHP(pl.LightningModule):
         n_head=4,
         d_k=64,
         d_v=64,
+        num_clusters=1,
+        num_types=1,
         dropout=0.1,
         smooth=0.1,
         lr=1e-4,
@@ -209,7 +210,7 @@ class TransformerHP(pl.LightningModule):
         )
 
         self.num_types = num_types
-        self.num_clusters = 1
+        self.num_clusters = num_clusters
         self.train_metric = purity
         self.val_metric = purity
         self.test_metric = purity
@@ -276,7 +277,7 @@ class TransformerHP(pl.LightningModule):
         ans = ans.reshape(ans.shape[0], ans.shape[1] * ans.shape[2])
         if self.clustering == "kmeans":
             kmeans = KMeans(
-                n_clusters=self.num_clusters, max_iter=100, mode="euclidean", verbose=1
+                n_clusters=self.num_clusters, max_iter=100, mode="euclidean", verbose=0
             )
             cluster_ids = kmeans.fit_predict(ans)
         else:

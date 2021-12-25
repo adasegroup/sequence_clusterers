@@ -112,7 +112,6 @@ class THPDataModule(LightningDataModule):
         )
         self.dataset = data
         self.labels = gt_ids
-        # THPDataset(mc_batch, gt_ids, self.maxsize)
 
     def setup(self, stage: Optional[str] = None):
         """

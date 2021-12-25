@@ -2,7 +2,7 @@ _target_: src.datamodules.thp_datamodule.THPDataModule
 
 data_dir: ${data_dir}
 data_config_yaml: ${data_config_file}
-maxsize: None
+maxsize: null
 maxlen: 300
 train_val_split: 0.8
 ext: "csv"
