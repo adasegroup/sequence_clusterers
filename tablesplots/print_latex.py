@@ -111,6 +111,7 @@ if __name__ == "__main__":
         "cohortney",
         "dmhp",
         "cae",
+        "thp",
         "kmeans_tslearn",
         "kshape_tslearn",
         "kmeans_tsfresh",
@@ -139,6 +140,7 @@ if __name__ == "__main__":
         "COHORTNEY",
         "DMHP",
         "Conv",
+        "Transformer",
         "K-shape",
         "K-means",
         "K-means0",
@@ -154,6 +156,7 @@ if __name__ == "__main__":
         "(ours)",
         "[45]",
         "autoenc",
+        "Hawkes Proc",
         "tslearn",
         "tslearn",
         "tsfresh",
@@ -173,6 +176,7 @@ if __name__ == "__main__":
         coh_total = []
         dmhp_total = []
         cae_total = []
+        thp_total = []
         kmeansts_total = []
         gmmts_total = []
         kshape_total = []
@@ -191,28 +195,31 @@ if __name__ == "__main__":
             cae = np.array(res_dict["cae"][table2_metric])
             cae_total.extend(cae)
             cae_cell = format_for_table2(cae)
+            thp = np.array(res_dict["thp"][table2_metric])
+            thp_total.extend(thp)
+            thp_cell = format_for_table2(thp)
             kmeansts = np.array(res_dict["kmeans_tsfresh"][table2_metric])
             kmeansts_total.extend(kmeansts)
             kmeansts_cell = format_for_table2(kmeansts)
-            # kmeansts_cell = "{:.2f}".format(round(np.mean(kmeansts), ROUND_DEC))
+
             gmmts = np.array(res_dict["gmm_tsfresh"][table2_metric])
             gmmts_total.extend(gmmts)
             gmmts_cell = format_for_table2(gmmts)
-            # gmmts_cell = "{:.2f}".format(round(np.mean(gmmts), ROUND_DEC))
+
             kshape = np.array(res_dict["kshape_tslearn"][table2_metric])
             kshape_total.extend(kshape)
             kshape_cell = format_for_table2(kshape)
-            # kshape_cell = "{:.2f}".format(round(np.mean(kshape), ROUND_DEC))
+
             kmeansps = np.array(res_dict["kmeans_tslearn"][table2_metric])
             kmeansps_total.extend(kmeansps)
             kmeansps_cell = format_for_table2(kmeansps)
-            # kmeansps_cell = "{:.2f}".format(round(np.mean(kmeansps), ROUND_DEC))
 
             symbolic = [
                 ds.replace("_", "\_"),
                 coh_cell,
                 dmhp_cell,
                 cae_cell,
+                thp_cell,
                 kshape_cell,
                 kmeansps_cell,
                 kmeansts_cell,
@@ -223,6 +230,7 @@ if __name__ == "__main__":
                 float(coh_cell.split(" ")[0]) if coh_cell != "-" else 0.0,
                 float(dmhp_cell.split(" ")[0]) if dmhp_cell != "-" else 0.0,
                 float(cae_cell.split(" ")[0]) if cae_cell != "-" else 0.0,
+                float(thp_cell.split(" ")[0]) if thp_cell != "-" else 0.0,
                 float(kshape_cell.split(" ")[0]) if kshape_cell != "-" else 0.0,
                 float(kmeansps_cell.split(" ")[0]) if kmeansps_cell != "-" else 0.0,
                 float(kmeansts_cell.split(" ")[0]) if kmeansts_cell != "-" else 0.0,
@@ -237,17 +245,18 @@ if __name__ == "__main__":
         coh_cell = format_for_table2(coh_total)
         dmhp_cell = format_for_table2(dmhp_total)
         cae_cell = format_for_table2(cae_total)
+        thp_cell = format_for_table2(thp_total)
         kshape_cell = format_for_table2(kshape_total)
         kmeansps_cell = format_for_table2(kmeansps_total)
         kmeansts_cell = format_for_table2(kmeansts_total)
         gmmts_cell = format_for_table2(gmmts_total)
-        # kshape_cell = "{:.2f}".format(round(np.mean(kshape_total), ROUND_DEC))
-        # kmeansps_cell = "{:.2f}".format(round(np.mean(kmeansps_total), ROUND_DEC))
+
         symbolic = [
             ds_type,
             coh_cell,
             dmhp_cell,
             cae_cell,
+            thp_cell,
             kshape_cell,
             kmeansps_cell,
             kmeansts_cell,
@@ -258,6 +267,7 @@ if __name__ == "__main__":
             float(coh_cell.split(" ")[0]) if coh_cell != "-" else 0.0,
             float(dmhp_cell.split(" ")[0]) if dmhp_cell != "-" else 0.0,
             float(cae_cell.split(" ")[0]) if cae_cell != "-" else 0.0,
+            float(thp_cell.split(" ")[0]) if cae_cell != "-" else 0.0,
             float(kshape_cell.split(" ")[0]) if kshape_cell != "-" else 0.0,
             float(kmeansps_cell.split(" ")[0]) if kmeansps_cell != "-" else 0.0,
             float(kmeansts_cell.split(" ")[0]) if kmeansts_cell != "-" else 0.0,

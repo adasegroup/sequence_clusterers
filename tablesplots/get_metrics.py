@@ -16,6 +16,7 @@ from sklearn.metrics.cluster import (
     v_measure_score,
 )
 
+
 def purity(gt_ids: torch.Tensor, learned_ids: torch.Tensor) -> float:
     """
     :arg:
@@ -100,7 +101,7 @@ def cohortney_tsfresh_stats(dataset: str, methods_list: List[str]):
             # training time
             res_file = os.path.join(exp, "results.pkl")
             if os.path.exists(res_file):
-                #n_runs += 1
+                # n_runs += 1
                 with open(res_file, "rb") as f:
                     res_list = pickle.load(f)
                 res_dict["cohortney"]["train_time"] += res_list[-1][4]
@@ -120,6 +121,7 @@ if __name__ == "__main__":
         "cohortney",
         "dmhp",
         "cae",
+        "thp",
         "kmeans_tslearn",
         "kshape_tslearn",
         "kmeans_tsfresh",
@@ -130,6 +132,6 @@ if __name__ == "__main__":
     print("number of runs", res_dict["gmm_tsfresh"]["n_runs"])
     for m in methods:
         print(m)
-        #print("mean alg time", res_dict[m]["time"] / res_dict[m]["n_runs"])
+        # print("mean alg time", res_dict[m]["time"] / res_dict[m]["n_runs"])
         print("mean purity", np.mean(np.array(res_dict[m]["purities"])))
         print("stdev purity", np.std(np.array(res_dict[m]["purities"])))
