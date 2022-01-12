@@ -15,7 +15,7 @@ n_runs: 10
 num_epochs: 50
 work_dir: ${hydra:runtime.cwd}
 data_config_file: ${work_dir}/src/datamodules/datasets_urls.yaml
-data_name: exp_K2_C5
+data_name: Linkedin
 data_dir: ${work_dir}/data/${data_name}
 save_dir: ${work_dir}/experiments/thp/${data_name}
 

@@ -276,6 +276,8 @@ class TransformerHP(pl.LightningModule):
         ans = x.squeeze()
         ans = ans.reshape(ans.shape[0], ans.shape[1] * ans.shape[2])
         if self.clustering == "kmeans":
+            #print(ans.shape)
+            #print(self.num_clusters)
             kmeans = KMeans(
                 n_clusters=self.num_clusters, max_iter=100, mode="euclidean", verbose=0
             )

@@ -51,14 +51,18 @@ def thp_collate_fn(instances, pad: int = 0):
     return time, event_type, torch.tensor(gt_cluster, dtype=torch.long)
 
 
-def download_unpack_zip(zipurl: str, data_dir):
+def download_unpack_zip(data_dict: Dict, data_dir):
     """
     Downloads zipped dataset and unpacks it to data directory
     """
+    zipurl = data_dict["url"]
     res_path = "/".join(data_dir.split("/")[:-1])
+    print(zipurl)
+    print(res_path)
     # download_link(zipurl, destination=res_path)
     res_code = os.system(f"wget {zipurl} -P {res_path}")
     if res_code != 0:
+        print(res_code)
         raise Exception("Encountered error while downloading data")
     zip_name = zipurl.split("/")[-1]
     lfilename = os.path.join(res_path, zip_name)
@@ -219,7 +223,23 @@ def load_data_thp(
             curr_dict["type_event"] = df[event_col].tolist()
             sequences.append(curr_dict)
 
-    num_events = max(classes) + 1
+    classes = list(classes)
+    print(classes)
+    print(classes[0])
+    print(type(classes[0]))
+    #if isinstance(classes[0], int) or isinstance(classes[0], float):
+    #    num_events = int(max(classes)) + 1
+    if isinstance(classes[0], str):
+        num_events = len(classes)
+        dict_map = {}
+        i = 0
+        for cl in classes:
+            dict_map[cl] = i
+            i += 1
+        for seq in sequences:
+            seq["type_event"] = [dict_map[event] for event in seq["type_event"]]
+    else:
+        num_events = int(max(classes)) + 1
 
     gt_ids = None
     num_clusters = -1
