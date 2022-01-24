@@ -3,10 +3,10 @@ from omegaconf import DictConfig
 from pytorch_lightning import seed_everything
 
 from src import (
-    train,
     cae_train,
     deep_cluster_train,
     thp_train,
+    thp_optuna,
     tslearn_infer,
     tsfresh_infer,
 )
@@ -25,8 +25,8 @@ def main(config: DictConfig):
         cae_train(config)
     elif config.task_type == "thp":
         thp_train(config)
-    elif config.task_type == "multi_pp":
-        train(config)
+    elif config.task_type == "thp_optuna":
+        thp_optuna(config)
     elif config.task_type == "tslearn":
         tslearn_infer(config)
     elif config.task_type == "tsfresh":
