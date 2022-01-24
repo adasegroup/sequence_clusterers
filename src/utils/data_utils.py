@@ -224,11 +224,6 @@ def load_data_thp(
             sequences.append(curr_dict)
 
     classes = list(classes)
-    print(classes)
-    print(classes[0])
-    print(type(classes[0]))
-    #if isinstance(classes[0], int) or isinstance(classes[0], float):
-    #    num_events = int(max(classes)) + 1
     if isinstance(classes[0], str):
         num_events = len(classes)
         dict_map = {}

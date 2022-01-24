@@ -28,7 +28,7 @@ def objective(trial: optuna.trial.Trial, config: DictConfig) -> float:
     log.info(f"Instantiating datamodule <{config.datamodule._target_}>")
     thp_dm: LightningDataModule = hydra.utils.instantiate(config.datamodule)
     thp_dm.prepare_data()
-    config.save_dir = str(Path(default_save_dir, "exp_optuna"))
+    config.save_dir = str(Path(default_save_dir, "optuna"))
     Path(config.save_dir).mkdir(parents=True, exist_ok=True)
 
     log.info(f"Run with Optuna")
