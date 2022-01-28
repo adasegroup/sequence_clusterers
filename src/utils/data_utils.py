@@ -40,8 +40,8 @@ def pad_type(instances, pad):
 
 def thp_collate_fn(instances, pad: int = 0):
     """
-    Collate function, as required by PyTorch.
-    pad - integer to pad all sequences
+    Collate function for PyTorch dataloader.
+        pad: integer to pad all sequences
     """
 
     time, event_type, gt_cluster = list(zip(*instances))
@@ -315,10 +315,7 @@ def load_data_kshape(
 
 def sep_hawkes_proc(user_list, event_type):
     """
-    transforming data to the array taking into account an event type
-    :param user_list:
-    :param event_type:
-    :return:
+    Transforming data to the array taking into account an event type
     """
     sep_seqs = []
     for user_dict in user_list:
