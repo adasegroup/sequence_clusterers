@@ -18,7 +18,7 @@ log = get_logger(__name__)
 
 def thp_train(config: DictConfig):
     """
-    Training module for transformer hawkes clustering for event sequences
+    Training module for event sequences
     """
     np.set_printoptions(threshold=10000)
     torch.set_printoptions(threshold=10000)

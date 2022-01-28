@@ -18,10 +18,8 @@ def main(config: DictConfig):
     if "seed" in config:
         seed_everything(config.seed)
 
-    # Train model
-    if config.task_type == "deep_clustering":
-        deep_cluster_train(config)
-    elif config.task_type == "cae":
+    # Train model-
+    if config.task_type == "cae":
         cae_train(config)
     elif config.task_type == "thp":
         thp_train(config)
