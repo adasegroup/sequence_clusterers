@@ -10,12 +10,12 @@ from pytorch_lightning import LightningDataModule, LightningModule, Trainer
 
 from pathlib import Path
 
-logger = logging.getLogger("tslearn")
+logger = logging.getLogger("inference_only")
 
 
-def tslearn_infer(config: DictConfig):
+def run_inference(config: DictConfig):
     """
-    Running tslearn standard method to infer cluster labels
+    Run inference only methods - tsfresh or tslearn
     """
 
     np.set_printoptions(threshold=10000)
@@ -24,9 +24,9 @@ def tslearn_infer(config: DictConfig):
     default_save_dir = config.save_dir
     # Init and prepare lightning datamodule
     logger.info(f"Instantiating datamodule <{config.datamodule._target_}>")
-    tslearn_dm: LightningDataModule = hydra.utils.instantiate(config.datamodule)
-    tslearn_dm.prepare_data()
-    tslearn_dm.setup(stage="test")
+    dm: LightningDataModule = hydra.utils.instantiate(config.datamodule)
+    dm.prepare_data()
+    dm.setup(stage="test")
 
     for i in range(config.n_runs):
 
@@ -37,7 +37,7 @@ def tslearn_infer(config: DictConfig):
 
         # Init lightning model
         logger.info(f"Instantiating model <{config.model._target_}>")
-        config.model.num_clusters = tslearn_dm.num_clusters
+        config.model.num_clusters = dm.num_clusters
         model: LightningModule = hydra.utils.instantiate(config.model)
 
         # Inference - cluster labels
@@ -45,12 +45,12 @@ def tslearn_infer(config: DictConfig):
             config.trainer, callbacks=None, logger=None, _convert_="partial"
         )
         logger.info("Starting predicting labels")
-        tslearn_dm.setup(stage="test")
-        trainer.test(model, tslearn_dm)
+        
+        trainer.test(model, dm)
         pred_labels = model.final_labels
-        gt_labels = tslearn_dm.test_data.target
+        gt_labels = dm.test_data.target
         # Saving predicted and actual labels - for graphs and tables
-        df = pd.DataFrame(columns=["cluster_id", "cluster_tslearn"])
+        df = pd.DataFrame(columns=["cluster_id", "cluster_pred"])
         df["cluster_id"] = gt_labels.tolist()
-        df["cluster_tslearn"] = pred_labels.tolist()
+        df["cluster_pred"] = pred_labels.tolist()
         df.to_csv(Path(config.save_dir, "inferredclusters.csv"))

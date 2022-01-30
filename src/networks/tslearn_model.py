@@ -29,11 +29,11 @@ class TsLearnClusterizer(pl.LightningModule):
         self.max_iter = max_iter
         self.test_metric = purity
         self.final_labels = None
-        if self.clustering_method == "k_shape":
+        if self.clustering_method == "kshape":
             self.cluster_model = KShape(
                 n_clusters=self.num_clusters, max_iter=self.max_iter
             )
-        elif self.clustering_method == "k_means_softdtw":
+        elif self.clustering_method == "kmeans":
             self.cluster_model = TimeSeriesKMeans(
                 n_clusters=self.num_clusters,
                 metric=self.kmeans_metric,

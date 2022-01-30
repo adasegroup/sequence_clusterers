@@ -2,34 +2,32 @@ seed: 42
 exp_name: default
 defaults:
     - _self_
-    - datamodule: tslearn_datamodule.yaml #cohortney_datamodule.yaml
+    - datamodule: thp_datamodule.yaml
     - trainer: default.yaml
-    - model: tslearn.yaml #conv1d_autoencoder.yaml
+    - model: transformer_hp.yaml
     - callbacks: default.yaml  
-    - experiment: null # test_tube.yaml
-    - logger: cohortney_logger.yaml # cohortney_logger.yaml # csv_logger.yaml  # test_tube.yaml
+    - experiment: null
+    - logger: cohortney_logger.yaml
     - aux_module: null
 
 
-n_runs: 1
-num_epochs: 5
+n_runs: 10
+num_epochs: 50
 work_dir: ${hydra:runtime.cwd}
 data_config_file: ${work_dir}/src/datamodules/datasets_urls.yaml
 data_name: Linkedin
 data_dir: ${work_dir}/data/${data_name}
-tslearn_method: k_shape # k_means_softdtw
-tsfresh_method: gmm # gmm
-save_dir: ${work_dir}/experiments/${tslearn_method}/${data_name}
+save_dir: ${work_dir}/experiments/thp/${data_name}
 
-# use `python run.py debug=true` for easy debugging!
-# this will run 1 train, val and test loop with only 1 batch
+# use `python run.py debug=true` for easy debugging
+# this will run single train, val and test loop with batch of 1
 # equivalent to running `python run.py trainer.fast_dev_run=true`
 debug: False
 
 # pretty print config at the start of the run using Rich library
 print_config: True
 
-# disable python warnings if they annoy you
+# disable python warnings
 ignore_warnings: True
 
 # check performance on test set, using the best model achieved during training

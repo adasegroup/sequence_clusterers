@@ -16,17 +16,17 @@ from src.utils.metrics import purity
 log = get_logger(__name__)
 
 
-def thp_train(config: DictConfig):
+def train_model(config: DictConfig):
     """
-    Training module for event sequences
+    Training module for clustering of event sequences
     """
     np.set_printoptions(threshold=10000)
     torch.set_printoptions(threshold=10000)
     default_save_dir = config.save_dir
     # Init and prepare lightning datamodule
     log.info(f"Instantiating datamodule <{config.datamodule._target_}>")
-    thp_dm: LightningDataModule = hydra.utils.instantiate(config.datamodule)
-    thp_dm.prepare_data()
+    dm: LightningDataModule = hydra.utils.instantiate(config.datamodule)
+    dm.prepare_data()
 
     for i in range(config.n_runs):
 
@@ -55,24 +55,28 @@ def thp_train(config: DictConfig):
             config.trainer, callbacks=callbacks, logger=logger, _convert_="partial"
         )
 
-        thp_dm.setup(stage="fit")
+        dm.setup(stage="fit")
         # Init lightning model
         log.info(f"Instantiating model <{config.model._target_}>")
-        config.model.num_clusters = thp_dm.num_clusters
-        config.model.num_types = thp_dm.num_events
+        if config.model._target_ == "src.networks.TransformerHP":
+            config.model.num_clusters = dm.num_clusters
+            config.model.num_types = dm.num_events
+        elif config.model._target_ == "src.networks.Conv1dAutoEncoder":
+            config.model.in_channels = dm.train_data.data.shape[1]
+            config.model.num_clusters = dm.num_clusters
         model: LightningModule = hydra.utils.instantiate(config.model)
 
         # Train the model
         log.info("Starting training")
-        trainer.fit(model, thp_dm)
+        trainer.fit(model, dm)
         # Inference - cluster labels
         log.info("Starting predicting labels")
-        thp_dm.setup(stage="test")
-        trainer.test(model, thp_dm)
+        dm.setup(stage="test")
+        trainer.test(model, dm)
         pred_labels = model.final_labels
-        gt_labels = thp_dm.test_data.gt_labels
+        gt_labels = dm.test_data.target
         # Saving predicted and actual labels - for graphs and tables
-        df = pd.DataFrame(columns=["cluster_id", "cluster_thp"])
+        df = pd.DataFrame(columns=["cluster_id", "cluster_pred"])
         df["cluster_id"] = gt_labels
-        df["cluster_thp"] = pred_labels.tolist()
+        df["cluster_pred"] = pred_labels.tolist()
         df.to_csv(Path(config.save_dir, "inferredclusters.csv"))
