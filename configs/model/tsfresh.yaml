@@ -1,6 +1,6 @@
 _target_: src.networks.TsFreshClusterizer
 
 num_clusters: 1
-clustering_method: ${tsfresh_method}
+clustering_method: kmeans # k_means, gmm
 kmeans_metric: softdtw # 'dtw', 'softdtw', 'euclidean'
 max_iter: 100
