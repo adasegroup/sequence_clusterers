@@ -22,6 +22,7 @@ def main(config: DictConfig):
         train_model(config)
     elif config.task_type == "thp_optuna":
         thp_optuna(config)
+        #train_model_hp(config)
     else:
         raise Exception(f"Warning {config.task_type} is not supported")
 

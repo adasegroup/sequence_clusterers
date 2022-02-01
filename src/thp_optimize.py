@@ -23,12 +23,12 @@ def objective(trial: optuna.trial.Trial, config: DictConfig) -> float:
 
     np.set_printoptions(threshold=10000)
     torch.set_printoptions(threshold=10000)
-    default_save_dir = config.save_dir
+    #default_save_dir = config.save_dir
     # Init and prepare lightning datamodule
     log.info(f"Instantiating datamodule <{config.datamodule._target_}>")
     thp_dm: LightningDataModule = hydra.utils.instantiate(config.datamodule)
     thp_dm.prepare_data()
-    config.save_dir = str(Path(default_save_dir, "optuna"))
+    config.save_dir = str(Path(config.save_dir, "optuna"))
     Path(config.save_dir).mkdir(parents=True, exist_ok=True)
 
     log.info(f"Run with Optuna")
@@ -92,8 +92,11 @@ def thp_optuna(config: DictConfig):
     log.info(f"Number of finished trials: {len(study.trials)}")
     log.info(f"Best trial:")
     trial = study.best_trial
-
+    # write best params to logger and file
     log.info(f" Value: {trial.value}")
     log.info(f" Params: ")
+    param_file = open(Path(config.save_dir,"best_params.txt"), "w")
     for key, value in trial.params.items():
         log.info(f"    {key}: {value}")
+        param_file.write(f"{key}: {value}") 
+    param_file.close()

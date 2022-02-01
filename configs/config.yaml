@@ -5,6 +5,7 @@ defaults:
     - datamodule: thp_datamodule.yaml
     - trainer: default.yaml
     - model: transformer_hp.yaml
+    - hparams_search: null 
     - callbacks: default.yaml  
     - experiment: null
     - logger: cohortney_logger.yaml
