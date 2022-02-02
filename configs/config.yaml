@@ -9,7 +9,6 @@ defaults:
     - callbacks: default.yaml  
     - experiment: null
     - logger: cohortney_logger.yaml
-    - aux_module: null
 
 
 n_runs: 10

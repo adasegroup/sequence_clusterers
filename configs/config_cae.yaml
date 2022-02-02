@@ -3,7 +3,7 @@ exp_name: default
 defaults:
     - _self_
     - datamodule: cae_datamodule.yaml
-    - trainer: gpu.yaml
+    - trainer: default.yaml
     - model: conv1d_autoencoder.yaml
     - callbacks: default.yaml  
     - experiment: null

@@ -98,5 +98,5 @@ def thp_optuna(config: DictConfig):
     param_file = open(Path(config.save_dir,"best_params.txt"), "w")
     for key, value in trial.params.items():
         log.info(f"    {key}: {value}")
-        param_file.write(f"{key}: {value}") 
+        param_file.write(f"{key}: {value}\n") 
     param_file.close()

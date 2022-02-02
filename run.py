@@ -4,6 +4,7 @@ from pytorch_lightning import seed_everything
 
 from src import (
     train_model,
+    train_model_hp,
     thp_optuna,
     run_inference,
 )
@@ -21,8 +22,8 @@ def main(config: DictConfig):
     elif config.task_type == "train":
         train_model(config)
     elif config.task_type == "thp_optuna":
-        thp_optuna(config)
-        #train_model_hp(config)
+        #thp_optuna(config)
+        train_model_hp(config)
     else:
         raise Exception(f"Warning {config.task_type} is not supported")
 
