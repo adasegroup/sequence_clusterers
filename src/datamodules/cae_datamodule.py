@@ -9,7 +9,7 @@ from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 
 from src.utils import make_grid
-from src.utils.cohortney_utils import arr_func, events_tensor, multiclass_fws_array
+from src.utils.cae_utils import arr_func, events_tensor, multiclass_fws_array
 from src.utils.data_utils import download_unpack_zip, load_data
 
 
@@ -51,7 +51,6 @@ class CAEDataModule(LightningDataModule):
         Th: int = 80,
         N: int = 2500,
         n: int = 8,
-        type_: bool = False,
     ):
         super().__init__()
         self.data_dir = data_dir
@@ -75,7 +74,6 @@ class CAEDataModule(LightningDataModule):
         self.N = N
         self.n = n
         self.dataset = None
-        self.type_ = type_
 
     def prepare_data(self):
         """
@@ -97,7 +95,6 @@ class CAEDataModule(LightningDataModule):
             time_col=self.time_col,
             event_col=self.event_col,
             datetime=self.datetime,
-            type_=self.type_,
         )
         # grid generation
         grid = make_grid(self.gamma, self.Tb, self.Th, self.N, self.n)

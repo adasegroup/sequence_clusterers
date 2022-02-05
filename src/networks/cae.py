@@ -23,7 +23,7 @@ def init_weights(m):
 class Conv1dAutoEncoder(pl.LightningModule):
     """
     Main block of convolutional event clustering
-    encoder-decoder architecture allows to create representation of Cohortney features
+    encoder-decoder architecture obtains representations of event sequences features
     """
 
     def __init__(

@@ -1,4 +1,4 @@
-exp_name: ${aux_module}
+exp_name: thp_optimal_params
 debug: False
 save_dir: ${save_dir}
 batch_size: 64

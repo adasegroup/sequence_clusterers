@@ -65,6 +65,9 @@ def train_model(config: DictConfig):
             config.model.in_channels = dm.train_data.data.shape[1]
             config.model.num_clusters = dm.num_clusters
         model: LightningModule = hydra.utils.instantiate(config.model)
+        if config.trainer.gpus > 0 and config.model._target_ == "src.networks.TransformerHP":
+            model.encoder.position_vec = model.encoder.position_vec.to('cuda:0')
+
 
         # Train the model
         log.info("Starting training")

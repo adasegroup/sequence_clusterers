@@ -64,7 +64,7 @@ class Encoder(nn.Module):
     """A encoder model with self attention mechanism."""
 
     def __init__(
-        self, num_types, d_model, d_inner, n_layers, n_head, d_k, d_v, dropout
+        self, num_types, d_model, d_inner, n_layers, n_head, d_k, d_v, enc_dev, dropout
     ):
         super().__init__()
 
@@ -73,6 +73,7 @@ class Encoder(nn.Module):
         # position vector, used for temporal encoding
         self.position_vec = torch.tensor(
             [math.pow(10000.0, 2.0 * (i // 2) / d_model) for i in range(d_model)],
+            device=enc_dev,
         )
 
         # event type embedding
@@ -205,6 +206,7 @@ class TransformerHP(pl.LightningModule):
             n_head=n_head,
             d_k=d_k,
             d_v=d_v,
+            enc_dev=self.device,
             dropout=dropout,
         )
 
