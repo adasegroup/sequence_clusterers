@@ -1,0 +1,67 @@
+# @package _global_
+
+# example hyperparameter optimization of some experiment with Optuna:
+# python run.py -m hparams_search=mnist_optuna experiment=example_simple hydra.sweeper.n_trials=30
+
+defaults:
+  - override /hydra/sweeper: optuna
+
+# choose metric which will be optimized by Optuna
+# make sure this is the correct name of some metric logged in lightning module!
+optimized_metric: "val_loss"
+
+hydra:
+  # here we define Optuna hyperparameter search
+  # it optimizes for value returned from function with @hydra.main decorator
+  # learn more here: https://hydra.cc/docs/next/plugins/optuna_sweeper
+  sweeper:
+    _target_: hydra_plugins.hydra_optuna_sweeper.optuna_sweeper.OptunaSweeper
+    storage: null
+    study_name: null
+    n_jobs: 2
+
+    # 'minimize' or 'maximize' the objective
+    direction: minimize
+
+    # number of experiments that will be executed
+    n_trials: 2
+
+    # choose Optuna hyperparameter sampler
+    # learn more here: https://optuna.readthedocs.io/en/stable/reference/samplers.html
+    sampler:
+      _target_: optuna.samplers.TPESampler
+      seed: 43
+      consider_prior: true
+      prior_weight: 1.0
+      consider_magic_clip: true
+      consider_endpoints: false
+      n_startup_trials: 10
+      n_ei_candidates: 24
+      multivariate: false
+      warn_independent_sampling: true
+
+    # define range of hyperparameters
+    search_space:
+      model.d_model:
+        type: categorical
+        choices: [64, 128, 256, 384, 512]
+      model.d_rnn:
+        type: categorical
+        choices: [256, 512, 768, 1024, 1536, 2048]
+      model.d_inner:
+        type: categorical
+        choices: [256, 512, 768, 1024, 1536, 2048]
+      model.n_layers:
+        type: categorical
+        choices: [1, 2, 3, 4, 5]
+      model.n_head:
+        type: categorical
+        choices: [1, 2, 3, 4, 5]
+      model.d_k:
+        type: int
+        low: 16
+        high: 512
+        step: 32
+      model.d_v:
+        type: categorical
+        choices: [16, 64, 128, 192, 256, 384, 512]

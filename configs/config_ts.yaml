@@ -7,8 +7,7 @@ defaults:
     - model: tsfresh.yaml 
     - callbacks: default.yaml  
     - experiment: null 
-    - logger: cohortney_logger.yaml 
-    - aux_module: null
+    - logger: cohortney_logger.yaml
 
 
 n_runs: 10
@@ -17,19 +16,17 @@ work_dir: ${hydra:runtime.cwd}
 data_config_file: ${work_dir}/src/datamodules/datasets_urls.yaml
 data_name: exp_K2_C5
 data_dir: ${work_dir}/data/${data_name}
-tslearn_method: k_shape # k_means_softdtw
-tsfresh_method: gmm # gmm
-save_dir: ${work_dir}/experiments/tsfresh_${tsfresh_method}/${data_name}
+save_dir: ${work_dir}/experiments/tsfresh/${data_name}
 
-# use `python run.py debug=true` for easy debugging!
-# this will run 1 train, val and test loop with only 1 batch
+# use `python run.py debug=true` for easy debugging
+# this will run single train, val and test loop with batch of 1
 # equivalent to running `python run.py trainer.fast_dev_run=true`
 debug: False
 
 # pretty print config at the start of the run using Rich library
 print_config: True
 
-# disable python warnings if they annoy you
+# disable python warnings
 ignore_warnings: True
 
 # check performance on test set, using the best model achieved during training

@@ -1,38 +1,32 @@
 # Sequence Clusterers
 
-Framework with Methods for Deep Clustering of Heterogeneous Event Sequences.
+Framework of Methods for Clustering of Heterogeneous Event Sequences.
 
-For conv1d AutoEncoder over sequences
+To train model:
 ```shell script
- PYTONPATH='.' python3 run.py aux_module=cae +task_type=cae
+python3 run.py --config_name config_thp.yaml +task_type=train
 ```
 
-Train deep clustering over sequences
+To use pretrained model for inference only:
 ```shell script
-PYTONPATH='.' python3 run.py aux_module=deep_cluster +task_type=deep_clustering
+python3 run.py --config_name config_ts.yaml +task_type=infer_only
 ```
 
-In order to reproduce experiments, the one firstly should configure:
+To reproduce experiments, one should edit several config files:
 ```
-- param. "data_dir" in ~/configs/config.yaml responsible for the dataset to be downloaded and preprocessed (based on in ~/blob/main/src/utils/__init__.py); 
-- hyperparams. of corresponding method in ~/configs/aux_module/;
-- training parameters (CPU\GPU) in ~/configs/trainer/default.yaml as well as NN-related training parameter (number of epochs);
+- param. "data_name" in ~/configs/config_name.yaml to choose corresponging dataset; 
+- hyperparams of corresponding method in ~/configs/model/name_of_method.yaml;
+- training parameters (device, number of epochs, etc.) in ~/configs/trainer/default.yaml;
+- hyperparameters of data preprocessing (max sequence length, batch size, etc.) in ~/configs/datamodule/name_of_datamodule.yaml;
 ```
 
 
 Datasets:
-Linkedin dataset, 
-Synthetic Hawkes processes realizations
+LinkedIn, Age, ATM, IPTV, Synthetic Hawkes processes realizations
 
-The dataset is taken from original [repo](https://github.com/VladislavZh/pp_clustering)
+The datasets are taken from [cloud drive](https://drive.google.com/drive/folders/1xSjHx7SQDEefgCuAeP21NLOabIpL13XH)
 
 
-Overview os the project:
-The project is the implementations on the methods to cluster sequences taken from two Github repositories  in a single repository with the unified  API and code structure that follows best practises of formatting. In the project we focus on the only working methods among propoced, namely DeepCluster and CAE (both over claasical Pure Chortney method) and do not include in the repository the implementations from parent repository that do not work based on execution manuals provided there. The methods aare refactored with use if Pytorch Lightning framework so that execution of the methods is handy and fast with very deep range of configurable parameters both for the experiments and of hardware usage. 
-
-The validation results are stored by the link: ``` https://github.com/adasegroup/cohortney/tree/main/results(logs) ``` 
-
-More detailed information about the project may be found in the recent report(s).
-
-The documentation is available locally in docs/build/html/_modules/index.html 
+Overview of the project:
+The project is the implementation of sequences clusterization methods using the common API and code structure that follows best practices of formatting. In the project we focus on proprietary method (aka Cohortney) and several baselines, including Convolutional Autoencoder, Transformer Hawkes Process, TsFresh and TsLearn feature extractors. The methods are refactored to fit Pytorch Lightning framework. 
 

@@ -23,7 +23,7 @@ def init_weights(m):
 class Conv1dAutoEncoder(pl.LightningModule):
     """
     Main block of convolutional event clustering
-    encoder-decoder architecture allows to create representation of Cohortney features
+    encoder-decoder architecture obtains representations of event sequences features
     """
 
     def __init__(
@@ -89,16 +89,7 @@ class Conv1dAutoEncoder(pl.LightningModule):
         ans = x.squeeze()
         ans = ans.reshape(ans.shape[0], ans.shape[1] * ans.shape[2])
         if self.clustering == "kmeans":
-            #curr_device = torch.device(
-            #    "cuda:" + str(ans.get_device()) if torch.cuda.is_available() else "cpu"
-            #)
-            #cluster_ids_x, cluster_centers = kmeans(
-            #    X=ans,
-            #    num_clusters=self.num_clusters,
-            #    distance="euclidean",
-            #    device=curr_device,
-            #)
-            kmeans = KMeans(n_clusters=self.num_clusters, max_iter=100, mode='euclidean', verbose=1)
+            kmeans = KMeans(n_clusters=self.num_clusters, max_iter=100, mode='euclidean', verbose=0)
             cluster_ids = kmeans.fit_predict(ans)
         else:
             raise Exception(f"Clusterization: {self.clustering} is not supported")

@@ -3,12 +3,8 @@ from omegaconf import DictConfig
 from pytorch_lightning import seed_everything
 
 from src import (
-    cae_train,
-    deep_cluster_train,
-    thp_train,
-    thp_optuna,
-    tslearn_infer,
-    tsfresh_infer,
+    train_model,
+    run_inference,
 )
 
 
@@ -18,17 +14,11 @@ def main(config: DictConfig):
     if "seed" in config:
         seed_everything(config.seed)
 
-    # Train model-
-    if config.task_type == "cae":
-        cae_train(config)
-    elif config.task_type == "thp":
-        thp_train(config)
-    elif config.task_type == "thp_optuna":
-        thp_optuna(config)
-    elif config.task_type == "tslearn":
-        tslearn_infer(config)
-    elif config.task_type == "tsfresh":
-        tsfresh_infer(config)
+    # Run different tasks
+    if config.task_type == "infer_only":
+        run_inference(config)
+    elif config.task_type == "train":
+        train_model(config)
     else:
         raise Exception(f"Warning {config.task_type} is not supported")
 

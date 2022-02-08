@@ -1,6 +1,6 @@
 _target_: src.networks.TsLearnClusterizer
 
 num_clusters: 1
-clustering_method: ${tslearn_method}
+clustering_method: kshape # kmeans, kshape
 kmeans_metric: softdtw # 'dtw', 'softdtw', 'euclidean'
 max_iter: 100

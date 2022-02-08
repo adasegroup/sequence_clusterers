@@ -59,7 +59,6 @@ def download_unpack_zip(data_dict: Dict, data_dir):
     res_path = "/".join(data_dir.split("/")[:-1])
     print(zipurl)
     print(res_path)
-    # download_link(zipurl, destination=res_path)
     res_code = os.system(f"wget {zipurl} -P {res_path}")
     if res_code != 0:
         print(res_code)
@@ -85,7 +84,6 @@ def load_data(
     time_col: str = "time",
     event_col: str = "event",
     datetime: bool = True,
-    type_=None,
 ) -> Tuple[List[torch.Tensor], torch.Tensor, Dict, List[Dict], torch.Tensor]:
     """
     Loads the sequences saved in the given directory.
@@ -112,12 +110,6 @@ def load_data(
     sequences = []
     classes = set()
     nb_files = 0
-    # if type_ == "booking1":
-    #     time_col = "checkin"
-    #     event_col = "city_id"
-    # elif type_ == "booking2":
-    #     time_col = "checkout"
-    #     event_col = "city_id"
 
     for file in sorted(
         os.listdir(data_dir),
@@ -240,7 +232,6 @@ def load_data_thp(
     num_clusters = -1
     if Path(data_dir, "clusters.csv").exists():
         gt_ids = pd.read_csv(Path(data_dir, "clusters.csv"))["cluster_id"].tolist()
-        # gt_ids = torch.LongTensor(gt_ids)
         num_clusters = int(max(gt_ids) - min(gt_ids)) + 1
 
     return sequences, gt_ids, num_events, num_clusters

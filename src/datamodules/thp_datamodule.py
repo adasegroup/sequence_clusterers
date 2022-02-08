@@ -37,13 +37,13 @@ class THPDataset(Dataset):
         self.event_type = [
             [elem + 1 for elem in list_of_dicts[i]["type_event"]] for i in indices
         ]
-        self.gt_labels = [gt_labels[i] for i in indices]
+        self.target = [gt_labels[i] for i in indices]
         if maxsize is not None:
             self.time = self.time[:maxsize]
             self.event_type = self.event_type[:maxsize]
-            self.gt_labels = self.gt_labels[:maxsize]
+            self.target = self.target[:maxsize]
 
-        self.length = len(self.gt_labels)
+        self.length = len(self.target)
         self.num_events = num_events
         self.num_clusters = num_clusters
 
@@ -52,7 +52,7 @@ class THPDataset(Dataset):
 
     def __getitem__(self, idx):
         """Each returned element is a list, which represents an event stream"""
-        return self.time[idx], self.event_type[idx], self.gt_labels[idx]
+        return self.time[idx], self.event_type[idx], self.target[idx]
 
 
 class THPDataModule(LightningDataModule):

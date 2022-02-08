@@ -1,3 +1,0 @@
-csv_logger:
-  _target_: pytorch_lightning.loggers.csv_logs.CsvLogger
-  save_dir: ${save_dir}
