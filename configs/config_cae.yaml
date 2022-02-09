@@ -10,11 +10,11 @@ defaults:
     - logger: cohortney_logger.yaml
 
 
-n_runs: 10
-num_epochs: 50
+n_runs: 2
+num_epochs: 2
 work_dir: ${hydra:runtime.cwd}
 data_config_file: ${work_dir}/src/datamodules/datasets_urls.yaml
-data_name: exp_K2_C5
+data_name: exp_K3_C5
 data_dir: ${work_dir}/data/${data_name}
 save_dir: ${work_dir}/experiments/cae/${data_name}
 

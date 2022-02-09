@@ -141,6 +141,8 @@ class Conv1dAutoEncoder(pl.LightningModule):
         latent = self(x)
         loss = torch.nn.MSELoss()(self.decoder(latent), x)
         self.log("test_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        print(x)
+        print(x.shape)
         tmp = x[:, :, 1:].sum(dim=1)
         dwn_target = tmp.argmax(dim=1)
         return {"loss": loss, "gts": gts, "latent": latent, "dwn_target": dwn_target}
