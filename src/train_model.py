@@ -83,3 +83,8 @@ def train_model(config: DictConfig):
         df["cluster_id"] = gt_labels
         df["cluster_pred"] = pred_labels.tolist()
         df.to_csv(Path(config.save_dir, "inferredclusters.csv"))
+        # Saving predicted probs and actual most freq event - for graphs and tables
+        df = pd.DataFrame(columns=["event_id", "event_pred"])
+        df["event_id"] = model.freq_events.tolist()
+        df["event_pred"] = model.final_probs.tolist()
+        df.to_csv(Path(config.save_dir, "inferredevents.csv"))
