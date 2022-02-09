@@ -100,7 +100,7 @@ class Conv1dAutoEncoder(pl.LightningModule):
         return cluster_ids
 
     def training_step(self, batch, batch_idx):
-        x, gts = batch
+        x, gts, _ = batch
         latent = self(x)
         loss = torch.nn.MSELoss()(self.decoder(latent), x)
         self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
@@ -119,7 +119,7 @@ class Conv1dAutoEncoder(pl.LightningModule):
         self.log("train_pur", pur, prog_bar=True)
 
     def validation_step(self, batch, batch_idx):
-        x, gts = batch
+        x, gts, _ = batch
         latent = self(x)
         loss = torch.nn.MSELoss()(self.decoder(latent), x)
         self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
@@ -137,15 +137,11 @@ class Conv1dAutoEncoder(pl.LightningModule):
         self.log("val_pur", pur, prog_bar=True)
 
     def test_step(self, batch, batch_idx: int):
-        x, gts = batch
+        x, gts, f = batch
         latent = self(x)
         loss = torch.nn.MSELoss()(self.decoder(latent), x)
         self.log("test_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
-        print(x)
-        print(x.shape)
-        tmp = x[:, :, 1:].sum(dim=1)
-        dwn_target = tmp.argmax(dim=1)
-        return {"loss": loss, "gts": gts, "latent": latent, "dwn_target": dwn_target}
+        return {"loss": loss, "gts": gts, "latent": latent, "dwn_target": f}
 
     def test_epoch_end(self, outputs):
         """

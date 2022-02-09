@@ -84,7 +84,7 @@ def load_data(
     time_col: str = "time",
     event_col: str = "event",
     datetime: bool = True,
-) -> Tuple[List[torch.Tensor], torch.Tensor, Dict, List[Dict], torch.Tensor]:
+) -> Tuple[List[torch.Tensor], torch.Tensor, Dict, List[Dict], torch.Tensor, torch.Tensor]:
     """
     Loads the sequences saved in the given directory.
 
@@ -104,12 +104,14 @@ def load_data(
         class2idx   - dict of event types and their indices
         user_list   - representation of sequences suitable for Cohortney
         gt_ids      - torch.Tensor of ground truth cluster labels (if available)
+        freq_events - torch.Tensor of most frequent events of each sequence
 
     """
 
     sequences = []
     classes = set()
     nb_files = 0
+    freq_events = []
 
     for file in sorted(
         os.listdir(data_dir),
@@ -128,6 +130,7 @@ def load_data(
                 df = df.iloc[:maxlen]
 
             sequences.append(df)
+            freq_events.append(df[event_col].mode()[0])
 
     classes = list(classes)
     class2idx = {cls: idx for idx, cls in enumerate(classes)}
@@ -155,13 +158,14 @@ def load_data(
         Ts.append(tens[-1, 0])
 
     Ts = torch.FloatTensor(Ts)
+    freq_events = torch.LongTensor(freq_events)
 
     gt_ids = None
     if Path(data_dir, "clusters.csv").exists():
         gt_ids = pd.read_csv(Path(data_dir, "clusters.csv"))["cluster_id"].to_numpy()
         gt_ids = torch.LongTensor(gt_ids)
 
-    return ss, Ts, class2idx, user_list, gt_ids
+    return ss, Ts, class2idx, user_list, gt_ids, freq_events
 
 
 def load_data_thp(
