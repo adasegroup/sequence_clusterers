@@ -134,6 +134,7 @@ def load_data(
 
     classes = list(classes)
     class2idx = {cls: idx for idx, cls in enumerate(classes)}
+    freq_events = [class2idx[f] for f in freq_events]
 
     ss, Ts = [], []
     user_list = []
@@ -232,6 +233,7 @@ def load_data_thp(
             i += 1
         for seq in sequences:
             seq["type_event"] = [dict_map[event] for event in seq["type_event"]]
+        freq_events = [dict_map[f] for f in freq_events]
     else:
         num_events = int(max(classes)) + 1
 
