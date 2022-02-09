@@ -175,7 +175,7 @@ def load_data_thp(
     time_col: str = "time",
     event_col: str = "event",
     datetime: bool = False,
-) -> Tuple[List[Dict], List, int, int]:
+) -> Tuple[List[Dict], List, List, int, int]:
     """
     Loads the sequences saved in the given directory.
     Args:
@@ -190,12 +190,14 @@ def load_data_thp(
         sequences          - list of torch.Tensor containing sequences. Each tensor has shape (L, 2), where
                         element is a sequence of pair (time, event type)
         gt_ids      - list of ground truth cluster labels (if available)
+        freq_events - list of most frequent events of each sequence
         num_events - number of types of events in dataset
         num_clusters - number of clusters in dataset
     """
 
     sequences = []
     classes = set()
+    freq_events = [] 
 
     for file in sorted(
         os.listdir(data_dir),
@@ -218,6 +220,7 @@ def load_data_thp(
             curr_dict["time_since_start"] = df[time_col].tolist()
             curr_dict["type_event"] = df[event_col].tolist()
             sequences.append(curr_dict)
+            freq_events.append(df[event_col].mode()[0])
 
     classes = list(classes)
     if isinstance(classes[0], str):
@@ -238,7 +241,7 @@ def load_data_thp(
         gt_ids = pd.read_csv(Path(data_dir, "clusters.csv"))["cluster_id"].tolist()
         num_clusters = int(max(gt_ids) - min(gt_ids)) + 1
 
-    return sequences, gt_ids, num_events, num_clusters
+    return sequences, gt_ids, freq_events, num_events, num_clusters
 
 
 def load_data_kshape(
