@@ -75,7 +75,7 @@ def train_model(config: DictConfig):
         # Inference - cluster labels
         log.info("Starting predicting labels")
         dm.setup(stage="test")
-        trainer.test(model, dm)
+        trainer.test(model, ckpt_path="best",datamodule= dm)
         pred_labels = model.final_labels
         gt_labels = dm.test_data.target
         # Saving predicted and actual labels - for graphs and tables

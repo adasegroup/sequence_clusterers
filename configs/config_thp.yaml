@@ -11,8 +11,8 @@ defaults:
     - logger: cohortney_logger.yaml
 
 
-n_runs: 10
-num_epochs: 50
+n_runs: 5
+num_epochs: 25
 work_dir: ${hydra:runtime.cwd}
 data_config_file: ${work_dir}/src/datamodules/datasets_urls.yaml
 data_name: Linkedin
