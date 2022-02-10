@@ -44,11 +44,11 @@ def thp_collate_fn(instances, pad: int = 0):
         pad: integer to pad all sequences
     """
 
-    time, event_type, gt_cluster = list(zip(*instances))
+    time, event_type, gt_cluster, f = list(zip(*instances))
     time = pad_time(time, pad)
     event_type = pad_type(event_type, pad)
 
-    return time, event_type, torch.tensor(gt_cluster, dtype=torch.long)
+    return time, event_type, torch.tensor(gt_cluster, dtype=torch.long), torch.tensor(f, dtype=torch.long)
 
 
 def download_unpack_zip(data_dict: Dict, data_dir):
