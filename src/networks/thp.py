@@ -311,6 +311,13 @@ class TransformerHP(pl.LightningModule):
         latent = outputs[0]["latent"]
         gt_labels = outputs[0]["gts"]
         for i in range(1, len(outputs)):
+            latent_dim1 = latent.shape[1]
+            outputs_dim1 = outputs[i]["latent"].shape[1]
+            if outputs_dim1 >= latent_dim1:
+                outputs[i]["latent"] = outputs[i]["latent"][:,:latent_dim1,:]
+            else:
+                pad1dim = (0, 0, 0, latent_dim1 - outputs_dim1, 0, 0)
+                outputs[i]["latent"] = F.pad(outputs[i]["latent"], pad1dim, "constant", 0)
             latent = torch.cat([latent, outputs[i]["latent"]], dim=0)
             gt_labels = torch.cat([gt_labels, outputs[i]["gts"]], dim=0)
         labels = self.predict_step(latent)
@@ -343,6 +350,13 @@ class TransformerHP(pl.LightningModule):
         latent = outputs[0]["latent"]
         gt_labels = outputs[0]["gts"]
         for i in range(1, len(outputs)):
+            latent_dim1 = latent.shape[1]
+            outputs_dim1 = outputs[i]["latent"].shape[1]
+            if outputs_dim1 >= latent_dim1:
+                outputs[i]["latent"] = outputs[i]["latent"][:,:latent_dim1,:]
+            else:
+                pad1dim = (0, 0, 0, latent_dim1 - outputs_dim1, 0, 0)
+                outputs[i]["latent"] = F.pad(outputs[i]["latent"], pad1dim, "constant", 0)
             latent = torch.cat([latent, outputs[i]["latent"]], dim=0)
             gt_labels = torch.cat([gt_labels, outputs[i]["gts"]], dim=0)
         labels = self.predict_step(latent)
@@ -378,6 +392,13 @@ class TransformerHP(pl.LightningModule):
         gt_labels = outputs[0]["gts"]
         dwn_target = outputs[0]["dwn_target"]
         for i in range(1, len(outputs)):
+            latent_dim1 = latent.shape[1]
+            outputs_dim1 = outputs[i]["latent"].shape[1]
+            if outputs_dim1 >= latent_dim1:
+                outputs[i]["latent"] = outputs[i]["latent"][:,:latent_dim1,:]
+            else:
+                pad1dim = (0, 0, 0, latent_dim1 - outputs_dim1, 0, 0)
+                outputs[i]["latent"] = F.pad(outputs[i]["latent"], pad1dim, "constant", 0)
             latent = torch.cat([latent, outputs[i]["latent"]], dim=0)
             gt_labels = torch.cat([gt_labels, outputs[i]["gts"]], dim=0)
             dwn_target = torch.cat([dwn_target, outputs[i]["dwn_target"]], dim=0)
