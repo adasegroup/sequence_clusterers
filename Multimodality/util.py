@@ -19,16 +19,15 @@ class Dataset:
     def __init__(self, config, data, subset):
         data = pandas.read_csv(f"{data}/{int(subset)}.csv")
         self.subset = subset
-        self.time = list(data['time'])
-        self.event = list(data['event'])
+        self.time = list(data["time"])
+        self.event = list(data["event"])
         print(self.event)
-        self.event_class = len(np.unique(np.array(self.event)[:-1])) 
+        self.event_class = len(np.unique(np.array(self.event)[:-1]))
         print(self.event)
         self.config = config
         self.seq_len = data.shape[0]
-        self.time_seqs, self.event_seqs = [self.time], [self.event] 
+        self.time_seqs, self.event_seqs = [self.time], [self.event]
         self.statistic()
-
 
     def __getitem__(self, item):
         return self.time_seqs[item], self.event_seqs[item]

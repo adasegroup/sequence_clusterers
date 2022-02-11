@@ -2,9 +2,9 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 ## #Code for CNN for text, taken from https://github.com/FernandoLpz/Text-Classification-CNN-PyTorch
 class TextClassifier(nn.ModuleList):
-
     def __init__(self, params):
         super(TextClassifier, self).__init__()
 
@@ -29,7 +29,9 @@ class TextClassifier(nn.ModuleList):
         self.stride = params.stride
 
         # Embedding layer definition
-        self.embedding = nn.Embedding(self.num_words + 1, self.embedding_size, padding_idx=0)
+        self.embedding = nn.Embedding(
+            self.num_words + 1, self.embedding_size, padding_idx=0
+        )
 
         # Convolution layers definition
         self.conv_1 = nn.Conv1d(self.seq_len, self.out_size, self.kernel_1, self.stride)
@@ -46,43 +48,48 @@ class TextClassifier(nn.ModuleList):
         # Fully connected layer definition
         self.fc = nn.Linear(self.in_features_fc(), 1)
 
-
     def in_features_fc(self):
-        '''Calculates the number of output features after Convolution + Max pooling
+        """Calculates the number of output features after Convolution + Max pooling
 
         Convolved_Features = ((embedding_size + (2 * padding) - dilation * (kernel - 1) - 1) / stride) + 1
         Pooled_Features = ((embedding_size + (2 * padding) - dilation * (kernel - 1) - 1) / stride) + 1
 
         source: https://pytorch.org/docs/stable/generated/torch.nn.Conv1d.html
-        '''
+        """
         # Calcualte size of convolved/pooled features for convolution_1/max_pooling_1 features
-        out_conv_1 = ((self.embedding_size - 1 * (self.kernel_1 - 1) - 1) / self.stride) + 1
+        out_conv_1 = (
+            (self.embedding_size - 1 * (self.kernel_1 - 1) - 1) / self.stride
+        ) + 1
         out_conv_1 = math.floor(out_conv_1)
         out_pool_1 = ((out_conv_1 - 1 * (self.kernel_1 - 1) - 1) / self.stride) + 1
         out_pool_1 = math.floor(out_pool_1)
 
         # Calcualte size of convolved/pooled features for convolution_2/max_pooling_2 features
-        out_conv_2 = ((self.embedding_size - 1 * (self.kernel_2 - 1) - 1) / self.stride) + 1
+        out_conv_2 = (
+            (self.embedding_size - 1 * (self.kernel_2 - 1) - 1) / self.stride
+        ) + 1
         out_conv_2 = math.floor(out_conv_2)
         out_pool_2 = ((out_conv_2 - 1 * (self.kernel_2 - 1) - 1) / self.stride) + 1
         out_pool_2 = math.floor(out_pool_2)
 
         # Calcualte size of convolved/pooled features for convolution_3/max_pooling_3 features
-        out_conv_3 = ((self.embedding_size - 1 * (self.kernel_3 - 1) - 1) / self.stride) + 1
+        out_conv_3 = (
+            (self.embedding_size - 1 * (self.kernel_3 - 1) - 1) / self.stride
+        ) + 1
         out_conv_3 = math.floor(out_conv_3)
         out_pool_3 = ((out_conv_3 - 1 * (self.kernel_3 - 1) - 1) / self.stride) + 1
         out_pool_3 = math.floor(out_pool_3)
 
         # Calcualte size of convolved/pooled features for convolution_4/max_pooling_4 features
-        out_conv_4 = ((self.embedding_size - 1 * (self.kernel_4 - 1) - 1) / self.stride) + 1
+        out_conv_4 = (
+            (self.embedding_size - 1 * (self.kernel_4 - 1) - 1) / self.stride
+        ) + 1
         out_conv_4 = math.floor(out_conv_4)
         out_pool_4 = ((out_conv_4 - 1 * (self.kernel_4 - 1) - 1) / self.stride) + 1
         out_pool_4 = math.floor(out_pool_4)
 
         # Returns "flattened" vector (input for fully connected layer)
         return (out_pool_1 + out_pool_2 + out_pool_3 + out_pool_4) * self.out_size
-
-
 
     def forward(self, x):
 
@@ -115,7 +122,7 @@ class TextClassifier(nn.ModuleList):
         self.union = union
         # The "flattened" vector is passed through a fully connected layer
         out = self.fc(union)
-        # Dropout is applied		
+        # Dropout is applied
         out = self.dropout(out)
         # Activation function is applied
         out = torch.sigmoid(out)
