@@ -65,19 +65,19 @@ class TsFreshClusterizer(pl.LightningModule):
     def test_step(self, batch, batch_idx: int):
         x, gts = batch
         
-        preds = self.cluster_model.fit_predict(x)
-        return {"preds": torch.tensor(preds), "gts": gts}
+        return {"features": x, "gts": gts}
 
     def test_epoch_end(self, outputs):
         """
         Outputs is list of dicts returned from training_step()
         """
-        labels = outputs[0]["preds"]
+        features = outputs[0]["features"]
         gt_labels = outputs[0]["gts"]
         for i in range(1, len(outputs)):
-            labels = torch.cat([labels, outputs[i]["preds"]], dim=0)
+            features = torch.cat([features, outputs[i]["features"]], dim=0)
             gt_labels = torch.cat([gt_labels, outputs[i]["gts"]], dim=0)
-        pur = self.test_metric(gt_labels, labels)
+        labels = self.cluster_model.fit_predict(features)
+        pur = self.test_metric(gt_labels, torch.tensor(labels))
         logger.info(f"test purity: {pur}")
         self.final_labels = labels
 

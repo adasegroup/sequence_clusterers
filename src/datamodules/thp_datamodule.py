@@ -22,6 +22,7 @@ class THPDataset(Dataset):
         self,
         list_of_dicts,
         gt_labels,
+        freq_events,
         indices,
         num_events,
         num_clusters,
@@ -38,10 +39,12 @@ class THPDataset(Dataset):
             [elem + 1 for elem in list_of_dicts[i]["type_event"]] for i in indices
         ]
         self.target = [gt_labels[i] for i in indices]
+        self.freqevent = [freq_events[i] for i in indices]
         if maxsize is not None:
             self.time = self.time[:maxsize]
             self.event_type = self.event_type[:maxsize]
             self.target = self.target[:maxsize]
+            self.freqevent = self.freqevent[:maxsize]
 
         self.length = len(self.target)
         self.num_events = num_events
@@ -52,7 +55,7 @@ class THPDataset(Dataset):
 
     def __getitem__(self, idx):
         """Each returned element is a list, which represents an event stream"""
-        return self.time[idx], self.event_type[idx], self.target[idx]
+        return self.time[idx], self.event_type[idx], self.target[idx], self.freqevent[idx]
 
 
 class THPDataModule(LightningDataModule):
@@ -102,7 +105,7 @@ class THPDataModule(LightningDataModule):
             download_unpack_zip(self.data_config[data_name], self.data_dir)
 
         print("Transforming data")
-        data, gt_ids, num_events, num_clusters = load_data_thp(
+        data, gt_ids, freq_events, num_events, num_clusters = load_data_thp(
             self.data_dir,
             self.maxlen,
             self.ext,
@@ -112,6 +115,7 @@ class THPDataModule(LightningDataModule):
         )
         self.dataset = data
         self.labels = gt_ids
+        self.freq_events = freq_events
 
     def setup(self, stage: Optional[str] = None):
         """
@@ -125,6 +129,7 @@ class THPDataModule(LightningDataModule):
             self.train_data = THPDataset(
                 self.dataset,
                 self.labels,
+                self.freq_events,
                 train_indices,
                 self.num_events,
                 self.num_clusters,
@@ -133,6 +138,7 @@ class THPDataModule(LightningDataModule):
             self.val_data = THPDataset(
                 self.dataset,
                 self.labels,
+                self.freq_events,
                 val_indices,
                 self.num_events,
                 self.num_clusters,
@@ -145,6 +151,7 @@ class THPDataModule(LightningDataModule):
             self.test_data = THPDataset(
                 self.dataset,
                 self.labels,
+                self.freq_events,
                 test_indices,
                 self.num_events,
                 self.num_clusters,
