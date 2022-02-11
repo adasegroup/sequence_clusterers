@@ -5,4 +5,4 @@ To execute code run multimodality.sh, adding necessary parameters if needed.
 
 	Seq_embed - creates embeding, using RMTPP (refer to https://www.kdd.org/kdd2016/papers/files/rpp1081-duA.pdf). 
 
-	Cluster.py - concatenates embeddings of text and seq and clusterizes it with Kmeans.
+	Cluster.py - concatenates embeddings of text and seq and clusterizes them with Kmeans.
