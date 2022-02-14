@@ -1,0 +1,15 @@
+_target_: src.datamodules.lal_datamodule.LALDataModule
+
+data_dir: ${data_dir} # data_dir is specified in config.yaml
+train_val_split: 0.8
+max_computing_size: 2000
+gamma_module: core
+preprocessing: 
+    type: equipartition
+    n_steps: 128
+    n_classes: 5
+    n_files: 2000
+n_clusters: 1
+batch_size: 50
+num_workers: 0
+pin_memory: False

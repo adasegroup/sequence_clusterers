@@ -37,8 +37,15 @@ def run_inference(config: DictConfig):
 
         # Init lightning model
         logger.info(f"Instantiating model <{config.model._target_}>")
-        config.model.num_clusters = dm.num_clusters
+        if config.model._target_ != "src.networks.lal_model.LALModel":
+            config.model.num_clusters = dm.num_clusters
+        else:
+            config.model.n_clusters = config.callbacks.gamma_controller.true_clusters
         model: LightningModule = hydra.utils.instantiate(config.model)
+
+        if config.model._target_ == "src.networks.lal_model.LALModel":
+            from src.utils.file_system_utils import load_model
+            model = load_model(Path(config.save_dir,'model.pt'))
 
         # Inference - cluster labels
         trainer: Trainer = hydra.utils.instantiate(

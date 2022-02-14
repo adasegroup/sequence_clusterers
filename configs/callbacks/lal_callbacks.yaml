@@ -1,0 +1,25 @@
+model_checkpoint:
+  _target_: pytorch_lightning.callbacks.ModelCheckpoint
+  monitor: "val/pur" # name of the logged metric which determines when model is improving
+  mode: "max" # can be "max" or "min"
+  save_top_k: 1 # save k best models (determined by above metric)
+  save_last: True # additionaly always save model from last epoch
+  verbose: False
+  dirpath: "checkpoints/"
+  filename: "epoch_{epoch:03d}"
+  auto_insert_metric_name: False
+
+lr_update:
+  _target_: src.callbacks.lr_callbacks.DecayLearningRate
+  lr_update_param: 0.5
+  lr_update_tol: 25
+  min_lr: 0.001
+  updated_lr: 0.001
+
+gamma_controller:
+  _target_: src.callbacks.gamma_callbacks.GammaChanger
+  max_m_step_epoch: 10
+  random_walking_max_epoch: 400
+  true_clusters: 5
+  upper_bound_clusters: 10
+  verbose: True

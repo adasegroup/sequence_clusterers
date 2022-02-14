@@ -1,0 +1,3 @@
+lal_logger:
+  _target_: src.loggers.lal_logger.LALCsvLogger
+  save_dir: ${save_dir}
