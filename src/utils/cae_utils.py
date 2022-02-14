@@ -1,4 +1,4 @@
-import  numpy as np
+import numpy as np
 import torch
 
 
@@ -56,12 +56,15 @@ def events_tensor(events_fws):
 
         ten = torch.tensor(events_fws[key]).unsqueeze(0)
         if ten.shape[1] == 1:
-            full_tensor_batch = torch.cat((full_tensor_batch.float(), ten.float()), dim=0)
+            full_tensor_batch = torch.cat(
+                (full_tensor_batch.float(), ten.float()), dim=0
+            )
         else:
             for i in range(ten.shape[1]):
                 ten2 = ten[:, i, :].unsqueeze(0)
-                full_tensor_batch = torch.cat((full_tensor_batch.float(), ten2.float()), dim=0)
+                full_tensor_batch = torch.cat(
+                    (full_tensor_batch.float(), ten2.float()), dim=0
+                )
     if len(full_tensor_batch.shape) == 4:
         full_tensor_batch = full_tensor_batch.squeeze(axis=1)
     return full_tensor_batch
-

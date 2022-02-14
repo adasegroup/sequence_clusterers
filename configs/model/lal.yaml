@@ -1,0 +1,16 @@
+_target_: src.networks.lal_model.LALModel
+
+model_type: LSTM
+model_params:
+    hidden_size: 128
+    num_layers: 3
+    num_classes: ${datamodule.preprocessing.n_classes}
+    num_clusters: 1
+    upper_bound_clusters: ${callbacks.gamma_controller.upper_bound_clusters}
+    n_steps: ${datamodule.preprocessing.n_steps}
+    dropout: 0.1
+n_clusters: 1
+epsilon: 0.00000001
+weight_decay: 0.00001
+lr: 0.1
+save_dir: ${save_dir}

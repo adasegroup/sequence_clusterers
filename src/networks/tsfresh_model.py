@@ -64,7 +64,6 @@ class TsFreshClusterizer(pl.LightningModule):
 
     def test_step(self, batch, batch_idx: int):
         x, gts = batch
-        
         return {"features": x, "gts": gts}
 
     def test_epoch_end(self, outputs):
