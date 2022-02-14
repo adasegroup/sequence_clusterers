@@ -77,7 +77,7 @@ def train_model(config: DictConfig):
         # Inference - cluster labels
         log.info("Starting predicting labels")
         dm.setup(stage="test")
-        trainer.test(model, dm)
+        trainer.test(model, ckpt_path="best",datamodule= dm)
         pred_labels = model.final_labels
         gt_labels = dm.test_data.target
         # Saving predicted and actual labels - for graphs and tables
@@ -85,3 +85,8 @@ def train_model(config: DictConfig):
         df["cluster_id"] = gt_labels
         df["cluster_pred"] = pred_labels.tolist()
         df.to_csv(Path(config.save_dir, "inferredclusters.csv"))
+        # Saving predicted probs and actual most freq event - for graphs and tables
+        df = pd.DataFrame(columns=["event_id", "event_pred"])
+        df["event_id"] = model.freq_events.tolist()
+        df["event_pred"] = model.final_probs.tolist()
+        df.to_csv(Path(config.save_dir, "inferredevents.csv"))

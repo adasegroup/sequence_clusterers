@@ -10,6 +10,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from fast_pytorch_kmeans import KMeans
 from src.utils import purity
+from sklearn.linear_model import LogisticRegression
 
 from src.utils.thp_utils import (
     MultiHeadAttention,
@@ -277,8 +278,6 @@ class TransformerHP(pl.LightningModule):
         ans = x.squeeze()
         ans = ans.reshape(ans.shape[0], ans.shape[1] * ans.shape[2])
         if self.clustering == "kmeans":
-            # print(ans.shape)
-            # print(self.num_clusters)
             kmeans = KMeans(
                 n_clusters=self.num_clusters, max_iter=100, mode="euclidean", verbose=0
             )
@@ -288,7 +287,7 @@ class TransformerHP(pl.LightningModule):
         return cluster_ids
 
     def training_step(self, batch, batch_idx):
-        x_time, x_event, gts = batch
+        x_time, x_event, gts, _ = batch
         latent, prediction = self(x_event, x_time)
         # negative log-likelihood
         event_ll, non_event_ll = log_likelihood(
@@ -305,23 +304,29 @@ class TransformerHP(pl.LightningModule):
         se = time_loss(prediction[1], x_time)
 
         loss = event_loss + pred_loss + se / self.scale_time_loss
-        # labels prediction
-        preds = self.predict_step(latent)
         self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
-        return {"loss": loss, "preds": preds, "gts": gts}
+        return {"loss": loss, "gts": gts, "latent": latent}
 
     def training_epoch_end(self, outputs):
-        labels = outputs[0]["preds"]
+        latent = outputs[0]["latent"]
         gt_labels = outputs[0]["gts"]
         for i in range(1, len(outputs)):
-            labels = torch.cat([labels, outputs[i]["preds"]], dim=0)
+            latent_dim1 = latent.shape[1]
+            outputs_dim1 = outputs[i]["latent"].shape[1]
+            if outputs_dim1 >= latent_dim1:
+                outputs[i]["latent"] = outputs[i]["latent"][:,:latent_dim1,:]
+            else:
+                pad1dim = (0, 0, 0, latent_dim1 - outputs_dim1, 0, 0)
+                outputs[i]["latent"] = F.pad(outputs[i]["latent"], pad1dim, "constant", 0)
+            latent = torch.cat([latent, outputs[i]["latent"]], dim=0)
             gt_labels = torch.cat([gt_labels, outputs[i]["gts"]], dim=0)
+        labels = self.predict_step(latent)
         pur = self.train_metric(gt_labels, labels)
         self.log("train_time", time.time() - self.time_start, prog_bar=False)
         self.log("train_pur", pur, prog_bar=True)
 
     def validation_step(self, batch, batch_idx):
-        x_time, x_event, gts = batch
+        x_time, x_event, gts, _ = batch
         latent, prediction = self(x_event, x_time)
         # negative log-likelihood
         event_ll, non_event_ll = log_likelihood(
@@ -338,22 +343,28 @@ class TransformerHP(pl.LightningModule):
         se = time_loss(prediction[1], x_time)
 
         loss = event_loss + pred_loss + se / self.scale_time_loss
-        # labels prediction
-        preds = self.predict_step(latent)
         self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
-        return {"loss": loss, "preds": preds, "gts": gts}
+        return {"loss": loss, "gts": gts, "latent": latent}
 
     def validation_epoch_end(self, outputs):
-        labels = outputs[0]["preds"]
+        latent = outputs[0]["latent"]
         gt_labels = outputs[0]["gts"]
         for i in range(1, len(outputs)):
-            labels = torch.cat([labels, outputs[i]["preds"]], dim=0)
+            latent_dim1 = latent.shape[1]
+            outputs_dim1 = outputs[i]["latent"].shape[1]
+            if outputs_dim1 >= latent_dim1:
+                outputs[i]["latent"] = outputs[i]["latent"][:,:latent_dim1,:]
+            else:
+                pad1dim = (0, 0, 0, latent_dim1 - outputs_dim1, 0, 0)
+                outputs[i]["latent"] = F.pad(outputs[i]["latent"], pad1dim, "constant", 0)
+            latent = torch.cat([latent, outputs[i]["latent"]], dim=0)
             gt_labels = torch.cat([gt_labels, outputs[i]["gts"]], dim=0)
+        labels = self.predict_step(latent)
         pur = self.val_metric(gt_labels, labels)
         self.log("val_pur", pur, prog_bar=True)
 
     def test_step(self, batch, batch_idx: int):
-        x_time, x_event, gts = batch
+        x_time, x_event, gts, f = batch
         latent, prediction = self(x_event, x_time)
         # negative log-likelihood
         event_ll, non_event_ll = log_likelihood(
@@ -370,23 +381,44 @@ class TransformerHP(pl.LightningModule):
         se = time_loss(prediction[1], x_time)
 
         loss = event_loss + pred_loss + se / self.scale_time_loss
-        # labels prediction
-        preds = self.predict_step(latent)
         self.log("test_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
-        return {"loss": loss, "preds": preds, "gts": gts}
+        return {"loss": loss, "gts": gts, "latent": latent, "dwn_target": f}
 
     def test_epoch_end(self, outputs):
         """
         Outputs is list of dicts returned from training_step()
         """
-        labels = outputs[0]["preds"]
+        latent = outputs[0]["latent"]
         gt_labels = outputs[0]["gts"]
+        dwn_target = outputs[0]["dwn_target"]
         for i in range(1, len(outputs)):
-            labels = torch.cat([labels, outputs[i]["preds"]], dim=0)
+            latent_dim1 = latent.shape[1]
+            outputs_dim1 = outputs[i]["latent"].shape[1]
+            if outputs_dim1 >= latent_dim1:
+                outputs[i]["latent"] = outputs[i]["latent"][:,:latent_dim1,:]
+            else:
+                pad1dim = (0, 0, 0, latent_dim1 - outputs_dim1, 0, 0)
+                outputs[i]["latent"] = F.pad(outputs[i]["latent"], pad1dim, "constant", 0)
+            latent = torch.cat([latent, outputs[i]["latent"]], dim=0)
             gt_labels = torch.cat([gt_labels, outputs[i]["gts"]], dim=0)
+            dwn_target = torch.cat([dwn_target, outputs[i]["dwn_target"]], dim=0)
+
+        labels = self.predict_step(latent)
         pur = self.test_metric(gt_labels, labels)
         self.final_labels = labels
         self.log("test_pur", pur, prog_bar=True)
+        # predicting most frequent
+        ans = latent.squeeze()
+        features = ans.reshape(ans.shape[0], ans.shape[1] * ans.shape[2])
+        N = len(features)
+        split = int(0.8 * N)
+        permutation = np.random.permutation(len(features))
+        clf = LogisticRegression().fit(
+            features.cpu().numpy()[permutation[:split]],
+            dwn_target.cpu().numpy()[permutation[:split]],
+        )
+        self.final_probs = clf.predict_proba(features.cpu().numpy())
+        self.freq_events = dwn_target
 
     def configure_optimizers(self):
         optimizer = optim.Adam(

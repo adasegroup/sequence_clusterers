@@ -101,3 +101,8 @@ Bookorder:
     url: "https://"
     num_clusters: 2
     num_events: 2
+Amazon7k:
+    url: "https://"
+    num_clusters: 8
+    num_events: 8
+    num_steps: 128

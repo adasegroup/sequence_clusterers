@@ -44,11 +44,11 @@ def thp_collate_fn(instances, pad: int = 0):
         pad: integer to pad all sequences
     """
 
-    time, event_type, gt_cluster = list(zip(*instances))
+    time, event_type, gt_cluster, f = list(zip(*instances))
     time = pad_time(time, pad)
     event_type = pad_type(event_type, pad)
 
-    return time, event_type, torch.tensor(gt_cluster, dtype=torch.long)
+    return time, event_type, torch.tensor(gt_cluster, dtype=torch.long), torch.tensor(f, dtype=torch.long)
 
 
 def download_unpack_zip(data_dict: Dict, data_dir):
@@ -84,7 +84,7 @@ def load_data(
     time_col: str = "time",
     event_col: str = "event",
     datetime: bool = True,
-) -> Tuple[List[torch.Tensor], torch.Tensor, Dict, List[Dict], torch.Tensor]:
+) -> Tuple[List[torch.Tensor], torch.Tensor, Dict, List[Dict], torch.Tensor, torch.Tensor]:
     """
     Loads the sequences saved in the given directory.
 
@@ -104,12 +104,14 @@ def load_data(
         class2idx   - dict of event types and their indices
         user_list   - representation of sequences suitable for Cohortney
         gt_ids      - torch.Tensor of ground truth cluster labels (if available)
+        freq_events - torch.Tensor of most frequent events of each sequence
 
     """
 
     sequences = []
     classes = set()
     nb_files = 0
+    freq_events = []
 
     for file in sorted(
         os.listdir(data_dir),
@@ -128,9 +130,11 @@ def load_data(
                 df = df.iloc[:maxlen]
 
             sequences.append(df)
+            freq_events.append(df[event_col].mode()[0])
 
     classes = list(classes)
     class2idx = {cls: idx for idx, cls in enumerate(classes)}
+    freq_events = [class2idx[f] for f in freq_events]
 
     ss, Ts = [], []
     user_list = []
@@ -155,13 +159,14 @@ def load_data(
         Ts.append(tens[-1, 0])
 
     Ts = torch.FloatTensor(Ts)
+    freq_events = torch.LongTensor(freq_events)
 
     gt_ids = None
     if Path(data_dir, "clusters.csv").exists():
         gt_ids = pd.read_csv(Path(data_dir, "clusters.csv"))["cluster_id"].to_numpy()
         gt_ids = torch.LongTensor(gt_ids)
 
-    return ss, Ts, class2idx, user_list, gt_ids
+    return ss, Ts, class2idx, user_list, gt_ids, freq_events
 
 
 def load_data_thp(
@@ -171,7 +176,7 @@ def load_data_thp(
     time_col: str = "time",
     event_col: str = "event",
     datetime: bool = False,
-) -> Tuple[List[Dict], List, int, int]:
+) -> Tuple[List[Dict], List, List, int, int]:
     """
     Loads the sequences saved in the given directory.
     Args:
@@ -186,12 +191,14 @@ def load_data_thp(
         sequences          - list of torch.Tensor containing sequences. Each tensor has shape (L, 2), where
                         element is a sequence of pair (time, event type)
         gt_ids      - list of ground truth cluster labels (if available)
+        freq_events - list of most frequent events of each sequence
         num_events - number of types of events in dataset
         num_clusters - number of clusters in dataset
     """
 
     sequences = []
     classes = set()
+    freq_events = [] 
 
     for file in sorted(
         os.listdir(data_dir),
@@ -214,6 +221,7 @@ def load_data_thp(
             curr_dict["time_since_start"] = df[time_col].tolist()
             curr_dict["type_event"] = df[event_col].tolist()
             sequences.append(curr_dict)
+            freq_events.append(df[event_col].mode()[0])
 
     classes = list(classes)
     if isinstance(classes[0], str):
@@ -225,6 +233,7 @@ def load_data_thp(
             i += 1
         for seq in sequences:
             seq["type_event"] = [dict_map[event] for event in seq["type_event"]]
+        freq_events = [dict_map[f] for f in freq_events]
     else:
         num_events = int(max(classes)) + 1
 
@@ -234,7 +243,7 @@ def load_data_thp(
         gt_ids = pd.read_csv(Path(data_dir, "clusters.csv"))["cluster_id"].tolist()
         num_clusters = int(max(gt_ids) - min(gt_ids)) + 1
 
-    return sequences, gt_ids, num_events, num_clusters
+    return sequences, gt_ids, freq_events, num_events, num_clusters
 
 
 def load_data_kshape(

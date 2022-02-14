@@ -14,19 +14,22 @@ from src.utils.data_utils import download_unpack_zip, load_data
 
 
 class CohortneyDataset(Dataset):
-    def __init__(self, data, target, maxsize: Optional[int] = None):
+    def __init__(self, data, target, freqevent, maxsize: Optional[int] = None):
         super(CohortneyDataset, self).__init__()
         if maxsize is None:
             self.data = data
             self.target = target
+            self.freqevent = freqevent
         else:
             self.data = data[:maxsize]
             self.target = target[:maxsize]
+            self.freqevent = freqevent[:maxsize]
 
     def __getitem__(self, idx):
         d = self.data[idx]
         t = self.target[idx]
-        return d, t
+        f = self.freqevent[idx]
+        return d, t, f
 
     def __len__(self):
         return len(self.data)
@@ -88,7 +91,7 @@ class CAEDataModule(LightningDataModule):
             download_unpack_zip(self.data_config[data_name], self.data_dir)
 
         print("Transforming data")
-        ss, Ts, class2idx, user_list, gt_ids = load_data(
+        ss, Ts, class2idx, user_list, gt_ids, freq = load_data(
             self.data_dir,
             maxlen=self.maxlen,
             ext=self.ext,
@@ -105,7 +108,7 @@ class CAEDataModule(LightningDataModule):
 
         _, events_fws_mc = arr_func(user_list, T_j, delta_T, multiclass_fws_array)
         mc_batch = events_tensor(events_fws_mc)
-        self.dataset = CohortneyDataset(mc_batch, gt_ids, self.maxsize)
+        self.dataset = CohortneyDataset(mc_batch, gt_ids, freq, self.maxsize)
 
     def setup(self, stage: Optional[str] = None):
         """
@@ -117,10 +120,12 @@ class CAEDataModule(LightningDataModule):
             self.train_data = CohortneyDataset(
                 self.dataset.data[permutation[:split]],
                 self.dataset.target[permutation[:split]],
+                self.dataset.freqevent[permutation[:split]],
             )
             self.val_data = CohortneyDataset(
                 self.dataset.data[permutation[split : len(self.dataset)]],
                 self.dataset.target[permutation[split : len(self.dataset)]],
+                self.dataset.freqevent[permutation[split : len(self.dataset)]],
             )
 
         # Assign test dataset for use in dataloader
