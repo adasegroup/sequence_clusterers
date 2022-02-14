@@ -7,6 +7,7 @@ import pandas as pd
 import torch
 from omegaconf import DictConfig
 from pytorch_lightning import LightningDataModule, LightningModule, Trainer
+from src.utils.file_system_utils import load_model
 
 from pathlib import Path
 
@@ -44,15 +45,14 @@ def run_inference(config: DictConfig):
         model: LightningModule = hydra.utils.instantiate(config.model)
 
         if config.model._target_ == "src.networks.lal_model.LALModel":
-            from src.utils.file_system_utils import load_model
-            model = load_model(Path(config.save_dir,'model.pt'))
+            model = load_model(Path(config.save_dir, "model.pt"))
 
         # Inference - cluster labels
         trainer: Trainer = hydra.utils.instantiate(
             config.trainer, callbacks=None, logger=None, _convert_="partial"
         )
         logger.info("Starting predicting labels")
-        
+
         trainer.test(model, dm)
         pred_labels = model.final_labels
         gt_labels = dm.test_data.target

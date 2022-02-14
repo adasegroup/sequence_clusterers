@@ -17,13 +17,13 @@ def create_folder_no_traceback(path_to_folder: str, rewrite: bool = False):
 
 
 def create_folder(path_to_folder: str, rewrite: bool = False):
-    path = path_to_folder.split('/')
-    p = ''
+    path = path_to_folder.split("/")
+    p = ""
     for i in path:
         p += i
-        if p!='':
+        if p != "":
             create_folder_no_traceback(p, rewrite)
-        p += '/'
+        p += "/"
 
 
 def clear_folder(path_to_folder: str):
@@ -40,21 +40,19 @@ def clear_folder(path_to_folder: str):
 def save_model(model, path):
     # saving model params
     conf = model.get_params()
-    with open(path+'/conf.json', 'w') as f:
+    with open(path + "/conf.json", "w") as f:
         json.dump(conf, f)
 
-    torch.save(model.state_dict(), path+'/model.pt')
+    torch.save(model.state_dict(), path + "/model.pt")
 
 
-def load_model(
-    path: str
-) -> torch.nn.Module:
-    with open(path + '/conf.json', 'r') as f:
+def load_model(path: str) -> torch.nn.Module:
+    with open(path + "/conf.json", "r") as f:
         conf = json.load(f)
 
-    model_type = conf['name']
-    del conf['name']
+    model_type = conf["name"]
+    del conf["name"]
 
     model = model_getter(model_type, conf)
-    model.load_state_dict(torch.load(path + '/model.pt'))
+    model.load_state_dict(torch.load(path + "/model.pt"))
     return model

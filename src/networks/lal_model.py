@@ -9,26 +9,29 @@ from src.utils.file_system_utils import save_model
 import numpy as np
 import time
 
+
 class LALModel(LightningModule):
     """
     LightningModule for LAL clustering.
     """
 
     def __init__(
-            self,
-            model_type: str = 'LSTM',
-            model_params: dict = {'input_size': 6,
-                                  'hidden_size': 128,
-                                  'num_layers': 3,
-                                  'num_classes': 5,
-                                  'num_clusters': 1,
-                                  'n_steps': 128,
-                                  'dropout': 0.3},
-            n_clusters: int = 1,
-            epsilon: float = 1e-8,
-            weight_decay: float = 1e-5,
-            lr: float = 1e-3,
-            save_dir: Optional[str] = None
+        self,
+        model_type: str = "LSTM",
+        model_params: dict = {
+            "input_size": 6,
+            "hidden_size": 128,
+            "num_layers": 3,
+            "num_classes": 5,
+            "num_clusters": 1,
+            "n_steps": 128,
+            "dropout": 0.3,
+        },
+        n_clusters: int = 1,
+        epsilon: float = 1e-8,
+        weight_decay: float = 1e-5,
+        lr: float = 1e-3,
+        save_dir: Optional[str] = None,
     ):
         # TODO saving model
         # TODO make model an instance
@@ -52,7 +55,7 @@ class LALModel(LightningModule):
         self.prev_loss = 1e9
         self.cur_loss = 1e9
         self.final_labels = None
-        
+
         self.start_time = time.time()
 
     def forward(self, x: torch.Tensor):
@@ -69,7 +72,7 @@ class LALModel(LightningModule):
 
     def self_gamma_step(self, batch: Any):
         x, y, gamma = batch
-        lambdas, proba = self.model(x,  self.hparams.epsilon, self.device)
+        lambdas, proba = self.model(x, self.hparams.epsilon, self.device)
         loss = self.criterion(x, lambdas, proba, self.hparams.epsilon)
         preds = torch.argmax(proba, dim=0)
         return loss, preds, y
@@ -94,12 +97,26 @@ class LALModel(LightningModule):
             cur_purs.append(float(batch_results["pur"]))
         self.prev_loss = self.cur_loss
         self.cur_loss = np.mean(cur_losses)
-        
+
         cur_time = time.time()
 
-        self.log("train/loss", np.mean(cur_losses), on_step=False, on_epoch=True, prog_bar=False)
-        self.log("train/pur", np.mean(cur_purs), on_step=False, on_epoch=True, prog_bar=True)
-        self.log("time", cur_time - self.start_time, on_step=False, on_epoch=True, prog_bar=True)
+        self.log(
+            "train/loss",
+            np.mean(cur_losses),
+            on_step=False,
+            on_epoch=True,
+            prog_bar=False,
+        )
+        self.log(
+            "train/pur", np.mean(cur_purs), on_step=False, on_epoch=True, prog_bar=True
+        )
+        self.log(
+            "time",
+            cur_time - self.start_time,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+        )
 
     def validation_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.step(batch)
@@ -116,8 +133,16 @@ class LALModel(LightningModule):
             cur_losses.append(float(batch_results["loss"].cpu()))
             cur_purs.append(float(batch_results["pur"]))
 
-        self.log("val/loss", np.mean(cur_losses), on_step=False, on_epoch=True, prog_bar=False)
-        self.log("val/pur", np.mean(cur_purs), on_step=False, on_epoch=True, prog_bar=True)
+        self.log(
+            "val/loss",
+            np.mean(cur_losses),
+            on_step=False,
+            on_epoch=True,
+            prog_bar=False,
+        )
+        self.log(
+            "val/pur", np.mean(cur_purs), on_step=False, on_epoch=True, prog_bar=True
+        )
 
         if self.hparams.save_dir:
             save_model(self.model, self.hparams.save_dir)
@@ -146,5 +171,7 @@ class LALModel(LightningModule):
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
         return torch.optim.Adam(
-            params=self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay
+            params=self.parameters(),
+            lr=self.hparams.lr,
+            weight_decay=self.hparams.weight_decay,
         )

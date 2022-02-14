@@ -89,7 +89,9 @@ class Conv1dAutoEncoder(pl.LightningModule):
         ans = x.squeeze()
         ans = ans.reshape(ans.shape[0], ans.shape[1] * ans.shape[2])
         if self.clustering == "kmeans":
-            kmeans = KMeans(n_clusters=self.num_clusters, max_iter=100, mode='euclidean', verbose=0)
+            kmeans = KMeans(
+                n_clusters=self.num_clusters, max_iter=100, mode="euclidean", verbose=0
+            )
             cluster_ids = kmeans.fit_predict(ans)
         else:
             raise Exception(f"Clusterization: {self.clustering} is not supported")

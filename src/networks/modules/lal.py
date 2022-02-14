@@ -30,16 +30,16 @@ class LSTMMultiplePointProcesses(nn.Module):
     """
 
     def __init__(
-            self,
-            hidden_size: int,
-            num_layers: int,
-            num_classes: int,
-            num_clusters: int,
-            upper_bound_clusters: int,
-            n_steps: int,
-            batch_first: bool = True,
-            dropout: float = 0.0,
-            bidirectional: bool = False,
+        self,
+        hidden_size: int,
+        num_layers: int,
+        num_classes: int,
+        num_clusters: int,
+        upper_bound_clusters: int,
+        n_steps: int,
+        batch_first: bool = True,
+        dropout: float = 0.0,
+        bidirectional: bool = False,
     ):
         super().__init__()
 
@@ -79,7 +79,7 @@ class LSTMMultiplePointProcesses(nn.Module):
 
         self.hidden0_reserved = self.hidden0.data.detach().clone()
         self.cell0_reserved = self.cell0.data.detach().clone()
-        self.s_reserved = [torch.ones(1)]*upper_bound_clusters
+        self.s_reserved = [torch.ones(1)] * upper_bound_clusters
 
         for k in range(upper_bound_clusters):
             setattr(self, "f_{}".format(k), ScaledSoftplus())
@@ -91,17 +91,17 @@ class LSTMMultiplePointProcesses(nn.Module):
 
     def get_params(self):
         return {
-            'name': 'LSTM',
-            'input_size': self.input_size,
-            'hidden_size': self.hidden_size,
-            'num_layers': self.num_layers,
-            'num_classes': self.num_classes,
-            'upper_bound_clusters': self.upper_bound_clusters,
-            'num_clusters': self.num_clusters,
-            'n_steps': self.n_steps,
-            'batch_first': self.batch_first,
-            'dropout': self.dropout,
-            'bidirectional': self.bidir,
+            "name": "LSTM",
+            "input_size": self.input_size,
+            "hidden_size": self.hidden_size,
+            "num_layers": self.num_layers,
+            "num_classes": self.num_classes,
+            "upper_bound_clusters": self.upper_bound_clusters,
+            "num_clusters": self.num_clusters,
+            "n_steps": self.n_steps,
+            "batch_first": self.batch_first,
+            "dropout": self.dropout,
+            "bidirectional": self.bidir,
         }
 
     def init_weigh(self, *args):
@@ -115,7 +115,10 @@ class LSTMMultiplePointProcesses(nn.Module):
         self.prev_num_clusters = self.num_clusters
         self.hidden0_reserved = self.hidden0.data.detach().clone()
         self.cell0_reserved = self.cell0.data.detach().clone()
-        self.s_reserved = [getattr(self, "f_{}".format(k)).s.data.detach().clone() for k in range(self.upper_bound_clusters)]
+        self.s_reserved = [
+            getattr(self, "f_{}".format(k)).s.data.detach().clone()
+            for k in range(self.upper_bound_clusters)
+        ]
 
     def reverse_weighs(self):
         self.num_clusters = self.prev_num_clusters
@@ -138,20 +141,33 @@ class LSTMMultiplePointProcesses(nn.Module):
             cluster_0, cluster_1 = cluster_1, cluster_0
 
         # merging
-        self.hidden0.data[cluster_0, ...] = ((
-                                                self.hidden0.data[cluster_0, ...] + self.hidden0.data[cluster_1, ...]
-                                             ) / 2).detach().clone()
-        self.hidden0.data[cluster_1:- 1, ...] = self.hidden0.data[cluster_1 + 1:, ...].detach().clone()
-        self.cell0.data[cluster_0, ...] = ((
-                                                    self.cell0.data[cluster_0, ...] + self.cell0.data[cluster_1, ...]
-                                            ) / 2).detach().clone()
-        self.cell0.data[cluster_1:- 1, ...] = self.cell0.data[cluster_1 + 1:, ...].detach().clone()
+        self.hidden0.data[cluster_0, ...] = (
+            (
+                (self.hidden0.data[cluster_0, ...] + self.hidden0.data[cluster_1, ...])
+                / 2
+            )
+            .detach()
+            .clone()
+        )
+        self.hidden0.data[cluster_1:-1, ...] = (
+            self.hidden0.data[cluster_1 + 1 :, ...].detach().clone()
+        )
+        self.cell0.data[cluster_0, ...] = (
+            ((self.cell0.data[cluster_0, ...] + self.cell0.data[cluster_1, ...]) / 2)
+            .detach()
+            .clone()
+        )
+        self.cell0.data[cluster_1:-1, ...] = (
+            self.cell0.data[cluster_1 + 1 :, ...].detach().clone()
+        )
 
         # updating number of clusters
         self.num_clusters -= 1
 
         for k in range(cluster_1, self.num_clusters):
-            getattr(self, "f_{}".format(k)).s.data = getattr(self, "f_{}".format(k + 1)).s.data
+            getattr(self, "f_{}".format(k)).s.data = getattr(
+                self, "f_{}".format(k + 1)
+            ).s.data
 
     def delete_cluster(self, cluster):
         """
@@ -163,14 +179,20 @@ class LSTMMultiplePointProcesses(nn.Module):
         assert self.num_clusters > 1
 
         # deleting
-        self.hidden0.data[cluster:- 1, ...] = self.hidden0.data[cluster + 1:, ...].detach().clone()
-        self.cell0.data[cluster:- 1, ...] = self.cell0.data[cluster + 1:, ...].detach().clone()
+        self.hidden0.data[cluster:-1, ...] = (
+            self.hidden0.data[cluster + 1 :, ...].detach().clone()
+        )
+        self.cell0.data[cluster:-1, ...] = (
+            self.cell0.data[cluster + 1 :, ...].detach().clone()
+        )
 
         # updating number of clusters
         self.num_clusters -= 1
 
         for k in range(cluster, self.num_clusters):
-            getattr(self, "f_{}".format(k)).s.data = getattr(self, "f_{}".format(k + 1)).s.data.detach().clone()
+            getattr(self, "f_{}".format(k)).s.data = (
+                getattr(self, "f_{}".format(k + 1)).s.data.detach().clone()
+            )
 
     def split_cluster(self, cluster):
         """
@@ -180,27 +202,33 @@ class LSTMMultiplePointProcesses(nn.Module):
 
         # splitting
         a = np.random.beta(1, 1)
-        self.hidden0.data[cluster, ...], self.hidden0.data[self.num_clusters, ...] = \
-            2 * a * self.hidden0.data[cluster, ...].detach().clone(),  2 * (1 - a) * self.hidden0.data[cluster, ...].detach().clone()
+        self.hidden0.data[cluster, ...], self.hidden0.data[self.num_clusters, ...] = (
+            2 * a * self.hidden0.data[cluster, ...].detach().clone(),
+            2 * (1 - a) * self.hidden0.data[cluster, ...].detach().clone(),
+        )
 
-        self.cell0.data[cluster, ...], self.cell0.data[self.num_clusters, ...] = \
-            2 * a * self.cell0.data[cluster, ...].detach().clone(), 2 * (1 - a) * self.cell0.data[cluster, ...].detach().clone()
+        self.cell0.data[cluster, ...], self.cell0.data[self.num_clusters, ...] = (
+            2 * a * self.cell0.data[cluster, ...].detach().clone(),
+            2 * (1 - a) * self.cell0.data[cluster, ...].detach().clone(),
+        )
 
         # updating number of clusters
         self.num_clusters += 1
 
-        getattr(self, "f_{}".format(self.num_clusters - 1)).s.data = getattr(self, "f_{}".format(cluster)).s.data.detach().clone()
+        getattr(self, "f_{}".format(self.num_clusters - 1)).s.data = (
+            getattr(self, "f_{}".format(cluster)).s.data.detach().clone()
+        )
 
     def compute_gamma(
-            self,
-            lambdas: torch.Tensor,
-            x: torch.Tensor,
-            size: Tuple[int, int],  # shape = [n_clusters, batch_size]
-            epsilon: float = 1e-8,
-            device='cpu'
+        self,
+        lambdas: torch.Tensor,
+        x: torch.Tensor,
+        size: Tuple[int, int],  # shape = [n_clusters, batch_size]
+        epsilon: float = 1e-8,
+        device="cpu",
     ) -> torch.Tensor:
         """
-            computes gamma
+        computes gamma
         """
         # preparing gamma template
         gamma = torch.zeros(size).to(device)
@@ -220,12 +248,9 @@ class LSTMMultiplePointProcesses(nn.Module):
             # computing gamma for k-th cluster
             tmp_sub = (lambdas - lambdas_k) * dts
             tmp = torch.sum(
-                - tmp_sub
+                -tmp_sub
                 + partitions
-                * (
-                        torch.log(lambdas + epsilon)
-                        - torch.log(lambdas_k + epsilon)
-                ),
+                * (torch.log(lambdas + epsilon) - torch.log(lambdas_k + epsilon)),
                 dim=(2, 3),
             )
             tmp = 1 / (torch.sum(torch.exp(tmp), dim=0))  # shape = [batch_size,]
@@ -237,14 +262,16 @@ class LSTMMultiplePointProcesses(nn.Module):
 
         return gamma
 
-    def forward(self, s, epsilon, device='cpu', return_states=False):
+    def forward(self, s, epsilon, device="cpu", return_states=False):
         """
         forward pass of the model
         """
         bs, seq_len, _ = s.shape
 
         # preparing lambdas template
-        lambdas = torch.zeros(self.num_clusters, bs, seq_len, self.num_classes).to(device)
+        lambdas = torch.zeros(self.num_clusters, bs, seq_len, self.num_classes).to(
+            device
+        )
 
         # iterating over point processes
         hiddens = []
@@ -269,14 +296,15 @@ class LSTMMultiplePointProcesses(nn.Module):
 
             # first lambda doesn't depend on history and depends only on the initial hidden state
             lambdas[k, :, 0, :] = getattr(self, "f_{}".format(k))(h0 @ self.W)[
-                                  None, :
-                                  ].repeat(bs, 1)
+                None, :
+            ].repeat(bs, 1)
             lambdas[k, :, 1:, :] = getattr(self, "f_{}".format(k))(
                 out[:, :-1, :] @ self.W
             )
 
-        gamma = self.compute_gamma(lambdas, s, (self.num_clusters, s.shape[0]),
-                                   epsilon, device=device)
+        gamma = self.compute_gamma(
+            lambdas, s, (self.num_clusters, s.shape[0]), epsilon, device=device
+        )
 
         if return_states:
             return lambdas, gamma, hiddens, cells

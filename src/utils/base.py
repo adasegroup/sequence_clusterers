@@ -15,7 +15,15 @@ def get_logger(name=__name__, level=logging.INFO):
 
     # this ensures all logging levels get marked with the rank zero decorator
     # otherwise logs would get multiplied for each GPU process in multi-GPU setup
-    for level in ("debug", "info", "warning", "error", "exception", "fatal", "critical"):
+    for level in (
+        "debug",
+        "info",
+        "warning",
+        "error",
+        "exception",
+        "fatal",
+        "critical",
+    ):
         setattr(logger, level, rank_zero_only(getattr(logger, level)))
 
     return logger
@@ -25,7 +33,7 @@ def make_grid(gamma, T_b, T_h, N, n):
     grid = []
     for i in range(N):
         a = gamma ** i * T_b
-        if (a <= T_h):
+        if a <= T_h:
             grid.append(a)
 
         else:
@@ -42,5 +50,6 @@ def setup_seed(seed):
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = True
+
 
 log = get_logger()

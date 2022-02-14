@@ -4,13 +4,14 @@ from pytorch_lightning.loggers.base import rank_zero_experiment
 import pandas as pd
 import json
 
+
 class LALCsvLogger(LightningLoggerBase):
     def __init__(self, save_dir):
         super().__init__()
         self.save_dir = save_dir
-        self.train_pd_table = pd.DataFrame(columns=['train_loss', 'train_pur','time'])
-        self.val_pd_table = pd.DataFrame(columns=['val_loss', 'val_pur'])
-        self.test_results = pd.DataFrame(columns=['test_loss', 'test_pur'])
+        self.train_pd_table = pd.DataFrame(columns=["train_loss", "train_pur", "time"])
+        self.val_pd_table = pd.DataFrame(columns=["val_loss", "val_pur"])
+        self.test_results = pd.DataFrame(columns=["test_loss", "test_pur"])
 
     @property
     def test_results(self):
@@ -70,12 +71,22 @@ class LALCsvLogger(LightningLoggerBase):
         # metrics is a dictionary of metric names and values
         # your code to record metrics goes here
         if "train/loss" in metrics:
-            self.train_pd_table.loc[len(self.train_pd_table)] = [metrics["train/loss"], metrics["train/pur"], metrics["time"]]
+            self.train_pd_table.loc[len(self.train_pd_table)] = [
+                metrics["train/loss"],
+                metrics["train/pur"],
+                metrics["time"],
+            ]
         elif "val/loss" in metrics:
-            self.val_pd_table.loc[len(self.val_pd_table)] = [metrics["val/loss"], metrics["val/pur"]]
+            self.val_pd_table.loc[len(self.val_pd_table)] = [
+                metrics["val/loss"],
+                metrics["val/pur"],
+            ]
         elif "test/loss" in metrics:
-            self.test_results.loc[len(self.test_results)] = [metrics["test/loss"], metrics["test/pur"]]
-            self.test_results.to_csv(self.save_dir+'/final_test_results.csv')
+            self.test_results.loc[len(self.test_results)] = [
+                metrics["test/loss"],
+                metrics["test/pur"],
+            ]
+            self.test_results.to_csv(self.save_dir + "/final_test_results.csv")
 
     @rank_zero_only
     def save(self):
@@ -88,5 +99,5 @@ class LALCsvLogger(LightningLoggerBase):
     def finalize(self, status):
         # Optional. Any code that needs to be run after training
         # finishes goes here
-        self.train_pd_table.to_csv(self.save_dir+'/training.csv')
-        self.val_pd_table.to_csv(self.save_dir+'/validation.csv')
+        self.train_pd_table.to_csv(self.save_dir + "/training.csv")
+        self.val_pd_table.to_csv(self.save_dir + "/validation.csv")
