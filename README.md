@@ -4,12 +4,12 @@ Framework of Methods for Clustering of Heterogeneous Event Sequences.
 
 To train model:
 ```shell script
-python3 run.py +config_name=config_name.yaml +task_type=train
+python3 run.py --config_name config_name.yaml +task_type=train
 ```
 
 To use pretrained model for inference only:
 ```shell script
-python3 run.py +config_name=config_name.yaml +task_type=infer_only
+python3 run.py --config_name config_name.yaml +task_type=infer_only
 ```
 
 To reproduce experiments, one should edit several config files:
