@@ -8,7 +8,7 @@ from src import (
 )
 
 
-@hydra.main(config_path="configs/", config_name="config_lal.yaml")
+@hydra.main(version_base=None, config_path="configs/", config_name="config_lal.yaml")
 def main(config: DictConfig):
     # Set seed for random number generators in pytorch, numpy and python.random
     if "seed" in config:
